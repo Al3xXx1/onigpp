@@ -150,11 +150,7 @@ void TestSwapWithWideCharacters() {
 	assert(op::regex_match(wsubject2.begin(), wsubject2.end(), wre2));
 
 	// Perform swap
-#ifndef USE_STD_FOR_TESTS
-	onigpp::swap(wre1, wre2);
-#else
-	std::swap(wre1, wre2);
-#endif
+	op::swap(wre1, wre2);
 
 	// Test wre1 after swap (should now match "test2")
 	assert(!op::regex_match(wsubject1.begin(), wsubject1.end(), wre1));
