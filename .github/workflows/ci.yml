@@ -56,7 +56,7 @@ jobs:
           submodules: recursive
 
       - name: Configure (MSVC x64)
-        run: cmake -S . -B build -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17
+        run: cmake -S . -B build -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 -DBUILD_SHARED_LIBS=OFF
 
       - name: Build (Release)
         run: cmake --build build --config Release -- /m
