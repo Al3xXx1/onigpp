@@ -50,7 +50,7 @@ ONIGPP_HEADER_INLINE void _append_replacement(
 			CharT n = fmt[i];
 
 			//--------------------------
-			// "$$" �� "$"
+			// "$$" --> "$"
 			//--------------------------
 			if (n == CharT('$')) {
 				result += CharT('$');
@@ -59,7 +59,7 @@ ONIGPP_HEADER_INLINE void _append_replacement(
 			}
 
 			//--------------------------
-			// "$&" �� whole match
+			// "$&" --> whole match
 			//--------------------------
 			if (n == CharT('&')) {
 				if (m.size() > 0 && m[0].matched)
@@ -69,7 +69,7 @@ ONIGPP_HEADER_INLINE void _append_replacement(
 			}
 
 			//--------------------------
-			// "$`" �� prefix
+			// "$`" --> prefix
 			//--------------------------
 			if (n == CharT('`')) {
 				auto pre = m.prefix();
@@ -80,7 +80,7 @@ ONIGPP_HEADER_INLINE void _append_replacement(
 			}
 
 			//--------------------------
-			// "$'" �� suffix
+			// "$'" --> suffix
 			//--------------------------
 			if (n == CharT('\'')) {
 				auto suf = m.suffix();
@@ -91,7 +91,7 @@ ONIGPP_HEADER_INLINE void _append_replacement(
 			}
 
 			//--------------------------
-			// "$+" �� last captured group
+			// "$+" --> last captured group
 			//--------------------------
 			if (n == CharT('+')) {
 				int last = -1;
@@ -106,14 +106,14 @@ ONIGPP_HEADER_INLINE void _append_replacement(
 			}
 
 			//--------------------------
-			// "${name}" �� named capture
+			// "${name}" --> named capture
 			//--------------------------
 			if (n == CharT('{')) {
 				size_type start = ++i;
 				while (i < len && fmt[i] != CharT('}')) i++;
 
 				if (i >= len) {
-					// missing '}' �� treat literally
+					// missing '}' --> treat literally
 					result += CharT('$');
 					result += CharT('{');
 					continue;
@@ -139,7 +139,7 @@ ONIGPP_HEADER_INLINE void _append_replacement(
 			}
 
 			//--------------------------
-			// "$n" �� numeric capture
+			// "$n" --> numeric capture
 			//--------------------------
 			if (n >= CharT('0') && n <= CharT('9')) {
 				size_type num = 0;
@@ -153,7 +153,7 @@ ONIGPP_HEADER_INLINE void _append_replacement(
 			}
 
 			//--------------------------
-			// Unknown pattern �� literal "$x"
+			// Unknown pattern --> literal "$x"
 			//--------------------------
 			result += CharT('$');
 			result += n;
@@ -673,7 +673,7 @@ ONIGPP_HEADER_INLINE regex_iterator<BidirIt, CharT, Traits>& regex_iterator<Bidi
 	// Get the end of the current search result
 	BidirIt current_match_end = m_results[0].second;
 
-	// �� Zero-width match handling ��
+	// Zero-width match handling
 	if (m_results[0].first == current_match_end) {
 		if (current_match_end != m_end) {
 			std::advance(current_match_end, 1); // Advance by 1 character
