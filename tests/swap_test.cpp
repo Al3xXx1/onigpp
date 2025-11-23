@@ -195,11 +195,7 @@ void TestSwapWithFlags() {
 	assert(op::regex_match(subject1.begin(), subject1.end(), re1)); // icase allows matching
 
 	// Perform swap
-#ifndef USE_STD_FOR_TESTS
-	onigpp::swap(re1, re2);
-#else
-	std::swap(re1, re2);
-#endif
+	op::swap(re1, re2);
 
 	// Verify flags after swap
 #ifndef USE_STD_FOR_TESTS
