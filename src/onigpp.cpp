@@ -336,13 +336,32 @@ OnigOptionType basic_regex<CharT, Traits>::_options_from_flags(flag_type f) {
 }
 
 template <class CharT, class Traits>
+OnigSyntaxType* basic_regex<CharT, Traits>::_syntax_from_flags(flag_type f) {
+	// Priority order: pick the first matching explicit grammar flag
+	if (f & regex_constants::basic)
+		return ONIG_SYNTAX_POSIX_BASIC;
+	else if (f & regex_constants::extended)
+		return ONIG_SYNTAX_POSIX_EXTENDED;
+	else if (f & regex_constants::awk)
+		return ONIG_SYNTAX_POSIX_EXTENDED; // AWK regex is similar to POSIX extended
+	else if (f & regex_constants::grep)
+		return ONIG_SYNTAX_GREP;
+	else if (f & regex_constants::egrep)
+		return ONIG_SYNTAX_POSIX_EXTENDED; // egrep uses extended regex (grep -E)
+	else if (f & regex_constants::ECMAScript)
+		return ONIG_SYNTAX_ONIGURUMA;
+	else
+		return ONIG_SYNTAX_ONIGURUMA;
+}
+
+template <class CharT, class Traits>
 basic_regex<CharT, Traits>::basic_regex(const string_type& s, flag_type f, OnigEncoding enc) : basic_regex(s.c_str(), s.length(), f, enc) { }
 
 template <class CharT, class Traits>
 basic_regex<CharT, Traits>::basic_regex(const CharT* s, size_type count, flag_type f, OnigEncoding enc)
 	: m_regex(nullptr), m_encoding(nullptr), m_flags(f), m_pattern(s, count)
 {
-	OnigSyntaxType* syntax = ONIG_SYNTAX_ONIGURUMA;
+	OnigSyntaxType* syntax = _syntax_from_flags(f);
 	OnigOptionType options = _options_from_flags(f);
 	OnigErrorInfo err_info;
 	if (!enc) enc = _get_default_encoding_from_char_type<CharT>();
@@ -357,7 +376,7 @@ basic_regex<CharT, Traits>::basic_regex(const self_type& other)
 {
 	if (!other.m_regex) return; // If the original object is invalid
 
-	OnigSyntaxType* syntax = ONIG_SYNTAX_ONIGURUMA;
+	OnigSyntaxType* syntax = _syntax_from_flags(m_flags);
 	OnigOptionType options = _options_from_flags(m_flags);
 	OnigErrorInfo err_info;
 
