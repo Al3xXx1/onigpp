@@ -56,35 +56,35 @@ using u32string = basic_string<char32_t>;
 
 namespace regex_constants {
 	// Error types
-	typedef int error_type;
+	using error_type = int;
 
 	// Syntax options
-	typedef unsigned long syntax_option_type;
-	inline constexpr syntax_option_type icase = (1 << 0);
-	inline constexpr syntax_option_type multiline = (1 << 1);
-	inline constexpr syntax_option_type extended = (1 << 2);
+	using syntax_option_type = unsigned long;
+	static constexpr syntax_option_type icase = (1 << 0);
+	static constexpr syntax_option_type multiline = (1 << 1);
+	static constexpr syntax_option_type extended = (1 << 2);
 
 	// Search/Match control flags
-	typedef unsigned long match_flag_type;
+	using match_flag_type = unsigned long;
 
 	// Directly mappable to Oniguruma API
-	inline constexpr match_flag_type match_not_bol = (1 << 3); // ONIG_OPTION_NOTBOL
-	inline constexpr match_flag_type match_not_eol = (1 << 4); // ONIG_OPTION_NOTEOL
-	inline constexpr match_flag_type match_any = (1 << 5);
+	static constexpr match_flag_type match_not_bol = (1 << 3); // ONIG_OPTION_NOTBOL
+	static constexpr match_flag_type match_not_eol = (1 << 4); // ONIG_OPTION_NOTEOL
+	static constexpr match_flag_type match_any = (1 << 5);
 
 	// Flags processed by logic (as there are no direct Oniguruma options)
-	inline constexpr match_flag_type match_not_null = (1 << 6); // Disallow zero-width match (treat length 0 match as failure)
-	inline constexpr match_flag_type match_prev_avail = (1 << 7); // For \b, \B, etc. determination
+	static constexpr match_flag_type match_not_null = (1 << 6); // Disallow zero-width match (treat length 0 match as failure)
+	static constexpr match_flag_type match_prev_avail = (1 << 7); // For \b, \B, etc. determination
 
 	// Format control flags for replacement
-	inline constexpr match_flag_type format_first_only = (1 << 8);
-	inline constexpr match_flag_type format_no_copy = (1 << 9);
-	inline constexpr match_flag_type format_literal = (1 << 10);
+	static constexpr match_flag_type format_first_only = (1 << 8);
+	static constexpr match_flag_type format_no_copy = (1 << 9);
+	static constexpr match_flag_type format_literal = (1 << 10);
 
 	// Default values
-	inline constexpr syntax_option_type normal = 0;
-	inline constexpr match_flag_type format_default = 0;
-	inline constexpr match_flag_type match_default = 0;
+	static constexpr syntax_option_type normal = 0;
+	static constexpr match_flag_type format_default = 0;
+	static constexpr match_flag_type match_default = 0;
 }
 
 ////////////////////////////////////////////
@@ -92,15 +92,16 @@ namespace regex_constants {
 
 namespace encoding_constants {
 	// Expose pointers to encodings provided by Oniguruma
-	inline OnigEncoding ASCII  = ONIG_ENCODING_ASCII;
-	inline OnigEncoding UTF8 = ONIG_ENCODING_UTF8;
-	inline OnigEncoding UTF16LE = ONIG_ENCODING_UTF16_LE;
-	inline OnigEncoding UTF16BE = ONIG_ENCODING_UTF16_BE;
-	inline OnigEncoding UTF32LE = ONIG_ENCODING_UTF32_LE;
-	inline OnigEncoding UTF32BE = ONIG_ENCODING_UTF32_BE;
-	inline OnigEncoding LATIN1 = ONIG_ENCODING_ISO_8859_1;
-	inline OnigEncoding SHIFT_JIS = ONIG_ENCODING_SJIS;
-	inline OnigEncoding EUC_JP = ONIG_ENCODING_EUC_JP;
+	// Using static instead of inline for C++11 compatibility
+	static OnigEncoding const ASCII  = ONIG_ENCODING_ASCII;
+	static OnigEncoding const UTF8 = ONIG_ENCODING_UTF8;
+	static OnigEncoding const UTF16LE = ONIG_ENCODING_UTF16_LE;
+	static OnigEncoding const UTF16BE = ONIG_ENCODING_UTF16_BE;
+	static OnigEncoding const UTF32LE = ONIG_ENCODING_UTF32_LE;
+	static OnigEncoding const UTF32BE = ONIG_ENCODING_UTF32_BE;
+	static OnigEncoding const LATIN1 = ONIG_ENCODING_ISO_8859_1;
+	static OnigEncoding const SHIFT_JIS = ONIG_ENCODING_SJIS;
+	static OnigEncoding const EUC_JP = ONIG_ENCODING_EUC_JP;
 	// Other encodings can be added as needed
 }
 
@@ -133,10 +134,10 @@ protected:
 template <class BidirIt>
 class sub_match : public std::pair<BidirIt, BidirIt> {
 public:
-	typedef BidirIt iterator;
-	typedef typename std::iterator_traits<BidirIt>::value_type value_type;
-	typedef typename std::iterator_traits<BidirIt>::difference_type difference_type;
-	typedef basic_string<value_type> string_type;
+	using iterator = BidirIt;
+	using value_type = typename std::iterator_traits<BidirIt>::value_type;
+	using difference_type = typename std::iterator_traits<BidirIt>::difference_type;
+	using string_type = basic_string<value_type>;
 
 	bool matched;
 
@@ -150,14 +151,14 @@ public:
 	string_type str() const { return string_type(this->first, this->second); }
 };
 
-typedef sub_match<const char*> csub_match;
-typedef sub_match<const wchar_t*> wcsub_match;
-typedef sub_match<const char16_t*> u16csub_match;
-typedef sub_match<const char32_t*> u32csub_match;
-typedef sub_match<string::const_iterator> ssub_match;
-typedef sub_match<wstring::const_iterator> wssub_match;
-typedef sub_match<u16string::const_iterator> u16ssub_match;
-typedef sub_match<u32string::const_iterator> u32ssub_match;
+using csub_match = sub_match<const char*>;
+using wcsub_match = sub_match<const wchar_t*>;
+using u16csub_match = sub_match<const char16_t*>;
+using u32csub_match = sub_match<const char32_t*>;
+using ssub_match = sub_match<string::const_iterator>;
+using wssub_match = sub_match<wstring::const_iterator>;
+using u16ssub_match = sub_match<u16string::const_iterator>;
+using u32ssub_match = sub_match<u32string::const_iterator>;
 
 ////////////////////////////////////////////
 // onigpp::regex_traits<CharT>
@@ -165,8 +166,8 @@ typedef sub_match<u32string::const_iterator> u32ssub_match;
 template <class CharT>
 class regex_traits {
 public:
-	typedef CharT char_type;
-	typedef basic_string<CharT> string_type;
+	using char_type = CharT;
+	using string_type = basic_string<CharT>;
 	static size_type length(const char_type* s) {
 		return std::char_traits<char_type>::length(s);
 	}
@@ -178,15 +179,15 @@ public:
 template <class BidirIt, class Alloc = std::allocator<sub_match<BidirIt>>>
 class match_results : public std::vector<sub_match<BidirIt>, Alloc> {
 public:
-	typedef sub_match<BidirIt> value_type;
-	typedef const value_type& const_reference;
-	typedef value_type& reference;
-	typedef typename std::vector<sub_match<BidirIt>, Alloc>::const_iterator const_iterator;
-	typedef typename std::vector<sub_match<BidirIt>, Alloc>::iterator iterator;
-	typedef typename std::iterator_traits<BidirIt>::difference_type difference_type;
-	typedef typename std::allocator_traits<Alloc>::size_type size_type;
-	typedef typename std::iterator_traits<BidirIt>::value_type char_type;
-	typedef basic_string<char_type> string_type;
+	using value_type = sub_match<BidirIt>;
+	using const_reference = const value_type&;
+	using reference = value_type&;
+	using const_iterator = typename std::vector<sub_match<BidirIt>, Alloc>::const_iterator;
+	using iterator = typename std::vector<sub_match<BidirIt>, Alloc>::iterator;
+	using difference_type = typename std::iterator_traits<BidirIt>::difference_type;
+	using size_type = typename std::allocator_traits<Alloc>::size_type;
+	using char_type = typename std::iterator_traits<BidirIt>::value_type;
+	using string_type = basic_string<char_type>;
 
 	match_results() : m_str_begin(), m_str_end() {}
 
@@ -218,12 +219,12 @@ template <class CharT, class Traits> class basic_regex;
 template <class CharT, class Traits = regex_traits<CharT>>
 class basic_regex {
 public:
-	typedef CharT value_type;
-	typedef Traits traits_type;
-	typedef typename Traits::string_type string_type;
-	typedef regex_constants::syntax_option_type flag_type;
-	typedef basic_regex<CharT,Traits> self_type;
-	typedef int locale_type;
+	using value_type = CharT;
+	using traits_type = Traits;
+	using string_type = typename Traits::string_type;
+	using flag_type = regex_constants::syntax_option_type;
+	using self_type = basic_regex<CharT,Traits>;
+	using locale_type = int;
 
 public:
 	basic_regex() : m_regex(nullptr), m_encoding(nullptr), m_flags(regex_constants::normal) { }
@@ -291,10 +292,10 @@ protected:
 ////////////////////////////////////////////
 // onigpp::regex, onigpp::wregex
 
-typedef basic_regex<char> regex;
-typedef basic_regex<wchar_t> wregex;
-typedef basic_regex<char16_t> u16regex;
-typedef basic_regex<char32_t> u32regex;
+using regex = basic_regex<char>;
+using wregex = basic_regex<wchar_t>;
+using u16regex = basic_regex<char16_t>;
+using u32regex = basic_regex<char32_t>;
 
 ////////////////////////////////////////////
 // onigpp::regex_iterator

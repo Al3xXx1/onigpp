@@ -10,6 +10,14 @@ enable_testing()
 # project name and languages
 project(onigpp C CXX)
 
+# Set C++11 standard
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Fallback for older CMake versions that don't support CMAKE_CXX_STANDARD
+if(CMAKE_VERSION VERSION_LESS "3.1")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+endif()
+
 if (MSVC)
     # replace "/MD" with "/MT" (building without runtime DLLs)
     set(CompilerFlags

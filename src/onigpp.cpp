@@ -50,7 +50,7 @@ ONIGPP_HEADER_INLINE void _append_replacement(
 			CharT n = fmt[i];
 
 			//--------------------------
-			// "$$" Å® "$"
+			// "$$" ÔøΩÔøΩ "$"
 			//--------------------------
 			if (n == CharT('$')) {
 				result += CharT('$');
@@ -59,7 +59,7 @@ ONIGPP_HEADER_INLINE void _append_replacement(
 			}
 
 			//--------------------------
-			// "$&" Å® whole match
+			// "$&" ÔøΩÔøΩ whole match
 			//--------------------------
 			if (n == CharT('&')) {
 				if (m.size() > 0 && m[0].matched)
@@ -69,7 +69,7 @@ ONIGPP_HEADER_INLINE void _append_replacement(
 			}
 
 			//--------------------------
-			// "$`" Å® prefix
+			// "$`" ÔøΩÔøΩ prefix
 			//--------------------------
 			if (n == CharT('`')) {
 				auto pre = m.prefix();
@@ -80,7 +80,7 @@ ONIGPP_HEADER_INLINE void _append_replacement(
 			}
 
 			//--------------------------
-			// "$'" Å® suffix
+			// "$'" ÔøΩÔøΩ suffix
 			//--------------------------
 			if (n == CharT('\'')) {
 				auto suf = m.suffix();
@@ -91,7 +91,7 @@ ONIGPP_HEADER_INLINE void _append_replacement(
 			}
 
 			//--------------------------
-			// "$+" Å® last captured group
+			// "$+" ÔøΩÔøΩ last captured group
 			//--------------------------
 			if (n == CharT('+')) {
 				int last = -1;
@@ -106,14 +106,14 @@ ONIGPP_HEADER_INLINE void _append_replacement(
 			}
 
 			//--------------------------
-			// "${name}" Å® named capture
+			// "${name}" ÔøΩÔøΩ named capture
 			//--------------------------
 			if (n == CharT('{')) {
 				size_type start = ++i;
 				while (i < len && fmt[i] != CharT('}')) i++;
 
 				if (i >= len) {
-					// missing '}' Å® treat literally
+					// missing '}' ÔøΩÔøΩ treat literally
 					result += CharT('$');
 					result += CharT('{');
 					continue;
@@ -139,7 +139,7 @@ ONIGPP_HEADER_INLINE void _append_replacement(
 			}
 
 			//--------------------------
-			// "$n" Å® numeric capture
+			// "$n" ÔøΩÔøΩ numeric capture
 			//--------------------------
 			if (n >= CharT('0') && n <= CharT('9')) {
 				size_type num = 0;
@@ -153,7 +153,7 @@ ONIGPP_HEADER_INLINE void _append_replacement(
 			}
 
 			//--------------------------
-			// Unknown pattern Å® literal "$x"
+			// Unknown pattern ÔøΩÔøΩ literal "$x"
 			//--------------------------
 			result += CharT('$');
 			result += n;
@@ -167,35 +167,30 @@ ONIGPP_HEADER_INLINE void _append_replacement(
 	}
 }
 
+// Helper template function specializations for C++11 compatibility
+// Forward declaration of the primary template
 template <class CharT>
-ONIGPP_HEADER_INLINE OnigEncoding _get_default_encoding_from_char_type() {
-	if constexpr (std::is_same_v<CharT, char>) {
-		return ONIG_ENCODING_UTF8; // Default is UTF-8
-	} else if constexpr (std::is_same_v<CharT, wchar_t>) {
-		// Use UTF-16 or UTF-32 depending on wchar_t size and endianness
-		if constexpr (sizeof(wchar_t) == 2) {
-			#if defined(_WIN32) || defined(__LITTLE_ENDIAN__) || \
-				(defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
-			return ONIG_ENCODING_UTF16_LE;
-			#else
-			return ONIG_ENCODING_UTF16_BE;
-			#endif
-		} else if constexpr (sizeof(wchar_t) == 4) {
-			#if defined(_WIN32) || defined(__LITTLE_ENDIAN__) || \
-				(defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
-			return ONIG_ENCODING_UTF32_LE;
-			#else
-			return ONIG_ENCODING_UTF32_BE;
-			#endif
-		}
-	} else if constexpr (std::is_same_v<CharT, char16_t>) {
+ONIGPP_HEADER_INLINE OnigEncoding _get_default_encoding_from_char_type_impl();
+
+// Note: Only the explicit specializations below for char, wchar_t, char16_t, 
+// and char32_t should be used.
+
+template <>
+ONIGPP_HEADER_INLINE OnigEncoding _get_default_encoding_from_char_type_impl<char>() {
+	return ONIG_ENCODING_UTF8; // Default is UTF-8
+}
+
+template <>
+ONIGPP_HEADER_INLINE OnigEncoding _get_default_encoding_from_char_type_impl<wchar_t>() {
+	// Use UTF-16 or UTF-32 depending on wchar_t size and endianness
+	if (sizeof(wchar_t) == 2) {
 		#if defined(_WIN32) || defined(__LITTLE_ENDIAN__) || \
 			(defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 		return ONIG_ENCODING_UTF16_LE;
 		#else
 		return ONIG_ENCODING_UTF16_BE;
 		#endif
-	} else if constexpr (std::is_same_v<CharT, char32_t>) {
+	} else if (sizeof(wchar_t) == 4) {
 		#if defined(_WIN32) || defined(__LITTLE_ENDIAN__) || \
 			(defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 		return ONIG_ENCODING_UTF32_LE;
@@ -203,8 +198,32 @@ ONIGPP_HEADER_INLINE OnigEncoding _get_default_encoding_from_char_type() {
 		return ONIG_ENCODING_UTF32_BE;
 		#endif
 	}
-	// Return UTF8 to avoid compilation errors if no suitable default
 	return ONIG_ENCODING_UTF8;
+}
+
+template <>
+ONIGPP_HEADER_INLINE OnigEncoding _get_default_encoding_from_char_type_impl<char16_t>() {
+	#if defined(_WIN32) || defined(__LITTLE_ENDIAN__) || \
+		(defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+	return ONIG_ENCODING_UTF16_LE;
+	#else
+	return ONIG_ENCODING_UTF16_BE;
+	#endif
+}
+
+template <>
+ONIGPP_HEADER_INLINE OnigEncoding _get_default_encoding_from_char_type_impl<char32_t>() {
+	#if defined(_WIN32) || defined(__LITTLE_ENDIAN__) || \
+		(defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+	return ONIG_ENCODING_UTF32_LE;
+	#else
+	return ONIG_ENCODING_UTF32_BE;
+	#endif
+}
+
+template <class CharT>
+ONIGPP_HEADER_INLINE OnigEncoding _get_default_encoding_from_char_type() {
+	return _get_default_encoding_from_char_type_impl<CharT>();
 }
 
 // This performs search using Oniguruma's str/end/start parameters correctly.
@@ -654,7 +673,7 @@ ONIGPP_HEADER_INLINE regex_iterator<BidirIt, CharT, Traits>& regex_iterator<Bidi
 	// Get the end of the current search result
 	BidirIt current_match_end = m_results[0].second;
 
-	// Åö Zero-width match handling Åö
+	// ÔøΩÔøΩ Zero-width match handling ÔøΩÔøΩ
 	if (m_results[0].first == current_match_end) {
 		if (current_match_end != m_end) {
 			std::advance(current_match_end, 1); // Advance by 1 character
