@@ -238,7 +238,6 @@ void TestReplacement() {
 	std::string result3 = op::regex_replace(s3, re3, fmt3);
 	// Expected result: -word-
 	// If it forced the next character output after a zero-width match, it would be "-w-o-r-d-"
-	std::cerr << "result3: " << result3 << std::endl;
 	assert(result3 == "-word-");
 
 	// 4.4. First-only replacement (format_first_only)

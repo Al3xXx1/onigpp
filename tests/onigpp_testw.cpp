@@ -230,7 +230,6 @@ void TestReplacement() {
 	std::wstring fmt3 = L"-";
 	std::wstring result3 = op::regex_replace(s3, re3, fmt3);
 	// Expected: -word-
-	std::wcerr << L"result3: " << result3 << std::endl;
 	assert(result3 == L"-word-");
 
 	// 4.4 First-only replacement (format_first_only)
