@@ -7,15 +7,7 @@ cmake_minimum_required(VERSION 3.10)
 # project name and languages
 project(onigpp C CXX RC)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    # using Clang
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    # using GCC
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
-elseif (MSVC)
+if (MSVC)
     # replace "/MD" with "/MT" (building without runtime DLLs)
     set(CompilerFlags
         CMAKE_C_FLAGS
@@ -46,5 +38,11 @@ add_executable(onigpp_test onigpp_test.cpp)
 target_compile_definitions(onigpp_test PRIVATE ONIG_STATIC)
 target_include_directories(onigpp_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(onigpp_test onig)
+
+# onigpp_testw.exe
+add_executable(onigpp_testw onigpp_testw.cpp)
+target_compile_definitions(onigpp_testw PRIVATE ONIG_STATIC)
+target_include_directories(onigpp_testw PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(onigpp_testw onig)
 
 ##############################################################################
