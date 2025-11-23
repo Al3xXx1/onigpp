@@ -60,31 +60,31 @@ namespace regex_constants {
 
 	// Syntax options
 	using syntax_option_type = unsigned long;
-	inline constexpr syntax_option_type icase = (1 << 0);
-	inline constexpr syntax_option_type multiline = (1 << 1);
-	inline constexpr syntax_option_type extended = (1 << 2);
+	static constexpr syntax_option_type icase = (1 << 0);
+	static constexpr syntax_option_type multiline = (1 << 1);
+	static constexpr syntax_option_type extended = (1 << 2);
 
 	// Search/Match control flags
 	using match_flag_type = unsigned long;
 
 	// Directly mappable to Oniguruma API
-	inline constexpr match_flag_type match_not_bol = (1 << 3); // ONIG_OPTION_NOTBOL
-	inline constexpr match_flag_type match_not_eol = (1 << 4); // ONIG_OPTION_NOTEOL
-	inline constexpr match_flag_type match_any = (1 << 5);
+	static constexpr match_flag_type match_not_bol = (1 << 3); // ONIG_OPTION_NOTBOL
+	static constexpr match_flag_type match_not_eol = (1 << 4); // ONIG_OPTION_NOTEOL
+	static constexpr match_flag_type match_any = (1 << 5);
 
 	// Flags processed by logic (as there are no direct Oniguruma options)
-	inline constexpr match_flag_type match_not_null = (1 << 6); // Disallow zero-width match (treat length 0 match as failure)
-	inline constexpr match_flag_type match_prev_avail = (1 << 7); // For \b, \B, etc. determination
+	static constexpr match_flag_type match_not_null = (1 << 6); // Disallow zero-width match (treat length 0 match as failure)
+	static constexpr match_flag_type match_prev_avail = (1 << 7); // For \b, \B, etc. determination
 
 	// Format control flags for replacement
-	inline constexpr match_flag_type format_first_only = (1 << 8);
-	inline constexpr match_flag_type format_no_copy = (1 << 9);
-	inline constexpr match_flag_type format_literal = (1 << 10);
+	static constexpr match_flag_type format_first_only = (1 << 8);
+	static constexpr match_flag_type format_no_copy = (1 << 9);
+	static constexpr match_flag_type format_literal = (1 << 10);
 
 	// Default values
-	inline constexpr syntax_option_type normal = 0;
-	inline constexpr match_flag_type format_default = 0;
-	inline constexpr match_flag_type match_default = 0;
+	static constexpr syntax_option_type normal = 0;
+	static constexpr match_flag_type format_default = 0;
+	static constexpr match_flag_type match_default = 0;
 }
 
 ////////////////////////////////////////////
@@ -92,15 +92,16 @@ namespace regex_constants {
 
 namespace encoding_constants {
 	// Expose pointers to encodings provided by Oniguruma
-	inline OnigEncoding ASCII  = ONIG_ENCODING_ASCII;
-	inline OnigEncoding UTF8 = ONIG_ENCODING_UTF8;
-	inline OnigEncoding UTF16LE = ONIG_ENCODING_UTF16_LE;
-	inline OnigEncoding UTF16BE = ONIG_ENCODING_UTF16_BE;
-	inline OnigEncoding UTF32LE = ONIG_ENCODING_UTF32_LE;
-	inline OnigEncoding UTF32BE = ONIG_ENCODING_UTF32_BE;
-	inline OnigEncoding LATIN1 = ONIG_ENCODING_ISO_8859_1;
-	inline OnigEncoding SHIFT_JIS = ONIG_ENCODING_SJIS;
-	inline OnigEncoding EUC_JP = ONIG_ENCODING_EUC_JP;
+	// Using static instead of inline for C++11 compatibility
+	static OnigEncoding const ASCII  = ONIG_ENCODING_ASCII;
+	static OnigEncoding const UTF8 = ONIG_ENCODING_UTF8;
+	static OnigEncoding const UTF16LE = ONIG_ENCODING_UTF16_LE;
+	static OnigEncoding const UTF16BE = ONIG_ENCODING_UTF16_BE;
+	static OnigEncoding const UTF32LE = ONIG_ENCODING_UTF32_LE;
+	static OnigEncoding const UTF32BE = ONIG_ENCODING_UTF32_BE;
+	static OnigEncoding const LATIN1 = ONIG_ENCODING_ISO_8859_1;
+	static OnigEncoding const SHIFT_JIS = ONIG_ENCODING_SJIS;
+	static OnigEncoding const EUC_JP = ONIG_ENCODING_EUC_JP;
 	// Other encodings can be added as needed
 }
 
