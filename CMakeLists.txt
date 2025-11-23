@@ -4,6 +4,9 @@
 # CMake minimum version
 cmake_minimum_required(VERSION 3.10)
 
+# enable testing
+enable_testing()
+
 # project name and languages
 project(onigpp C CXX)
 
@@ -40,5 +43,17 @@ target_link_libraries(onigpp PUBLIC onig)
 
 # tests
 add_subdirectory(tests)
+
+# CTest tests
+add_test(
+    NAME test1
+    COMMAND $<TARGET_FILE:onigpp_test>
+    CONFIGURATIONS Debug
+    WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
+add_test(
+    NAME test2
+    COMMAND $<TARGET_FILE:onigpp_testw>
+    CONFIGURATIONS Debug
+    WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
 
 ##############################################################################
