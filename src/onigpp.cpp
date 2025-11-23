@@ -13,6 +13,30 @@ namespace onigpp {
 ////////////////////////////////////////////
 // Implementation helpers
 
+// Helper templates for POSIX class expansion with SFINAE
+// Only enabled for char and wchar_t where std::ctype is available
+
+// Primary template - returns pattern unchanged for unsupported types
+template <class CharT, class Enable = void>
+struct posix_class_expander {
+	typedef std::basic_string<CharT> string_type;
+	static string_type expand(const std::locale& loc, const string_type& pattern) {
+		// For char16_t, char32_t, etc. - no locale support, return unchanged
+		return pattern;
+	}
+};
+
+// Specialization for char and wchar_t where std::ctype is available
+template <class CharT>
+struct posix_class_expander<CharT,
+	typename std::enable_if<
+		std::is_same<CharT, char>::value || std::is_same<CharT, wchar_t>::value
+	>::type>
+{
+	typedef std::basic_string<CharT> string_type;
+	static string_type expand(const std::locale& loc, const string_type& pattern);
+};
+
 // Helper to access protected members of basic_regex
 template <class CharT, class Traits>
 struct regex_access : public basic_regex<CharT, Traits> {
@@ -477,18 +501,27 @@ basic_regex<CharT, Traits>::_preprocess_pattern_for_locale(const string_type& pa
 		return pattern;
 	}
 	
-	// std::ctype is only defined for char and wchar_t in the standard library.
-	// For char16_t and char32_t, we don't have locale support, so return unchanged.
-	// Use std::is_same to check at compile time which character type we're dealing with.
-	if (!std::is_same<CharT, char>::value && !std::is_same<CharT, wchar_t>::value) {
-		// For char16_t, char32_t, or any other character type, don't preprocess
-		return pattern;
-	}
+	// Use SFINAE helper to only compile locale-based expansion for char and wchar_t
+	return posix_class_expander<CharT>::expand(m_locale, pattern);
+}
+
+// Implementation of POSIX class expansion for char and wchar_t
+template <class CharT>
+typename posix_class_expander<CharT,
+	typename std::enable_if<
+		std::is_same<CharT, char>::value || std::is_same<CharT, wchar_t>::value
+	>::type>::string_type
+posix_class_expander<CharT,
+	typename std::enable_if<
+		std::is_same<CharT, char>::value || std::is_same<CharT, wchar_t>::value
+	>::type>::expand(const std::locale& loc, const string_type& pattern) {
+	typedef std::basic_string<CharT> string_type;
+	typedef typename string_type::size_type size_type;
 	
 	string_type result;
 	result.reserve(pattern.size());
 	
-	const std::ctype<CharT>& ct = std::use_facet<std::ctype<CharT>>(m_locale);
+	const std::ctype<CharT>& ct = std::use_facet<std::ctype<CharT>>(loc);
 	
 	size_type i = 0;
 	const size_type len = pattern.size();
