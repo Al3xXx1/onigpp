@@ -343,11 +343,10 @@ void TestEncodingAndError() {
 int main() {
 	// --- Measures to avoid garbled characters on Windows consoles ---
 #ifdef _WIN32
-	// Switch standard output and error to wide-character mode when possible
-	// Note: _O_WTEXT is used to allow wide-character output on Windows consoles.
-	_setmode(_fileno(stdout), _O_WTEXT);
-	_setmode(_fileno(stdin),  _O_WTEXT);
-	_setmode(_fileno(stderr), _O_WTEXT);
+	// Switch to UTF-8 mode
+	_setmode(_fileno(stdout), _O_U8TEXT);
+	_setmode(_fileno(stderr), _O_U8TEXT);
+	_setmode(_fileno(stdin), _O_U8TEXT);
 	// Ensure console uses UTF-8 code page for interoperability
 	SetConsoleOutputCP(CP_UTF8);
 #else

@@ -385,9 +385,9 @@ void TestEncodingAndError() {
 int main() {
 	// --- Measures against garbled or non-displaying characters on Windows ---
 #ifdef _WIN32
-	// Switch standard output to UTF-8 mode
+	// Switch to UTF-8 mode
 	_setmode(_fileno(stdout), _O_U8TEXT);
-	// Need to set stdin as well if receiving input
+	_setmode(_fileno(stderr), _O_U8TEXT);
 	_setmode(_fileno(stdin), _O_U8TEXT);
 	// UTF-8 Code Page
 	SetConsoleOutputCP(CP_UTF8);
