@@ -251,6 +251,7 @@ OnigEncoding _get_default_encoding_from_char_type() {
 // This performs search using Oniguruma's str/end/start parameters correctly.
 // whole_first: iterator pointing to the beginning of the entire subject string
 // search_start: iterator where search should begin (may be >= whole_first)
+// Note: Supports arbitrary BidirectionalIterators by copying to a temporary buffer
 template <class BidirIt, class Alloc, class CharT, class Traits>
 bool _regex_search_with_context(
 	BidirIt whole_first, BidirIt search_start, BidirIt last,
@@ -267,13 +268,17 @@ bool _regex_search_with_context(
 	if (flags & regex_constants::match_not_bol) onig_options |= ONIG_OPTION_NOTBOL;
 	if (flags & regex_constants::match_not_eol) onig_options |= ONIG_OPTION_NOTEOL;
 
-	// Compute lengths and pointers
+	// Compute lengths
 	size_type total_len = std::distance(whole_first, last);
 	size_type search_offset = std::distance(whole_first, search_start);
 
+	// Copy the subject range into a temporary contiguous buffer to support
+	// non-contiguous BidirectionalIterators (e.g., std::list, std::deque)
+	std::basic_string<CharT> subject_buf(whole_first, last);
+
 	// Use stable static buffer for empty ranges to avoid passing nullptr to C API
 	static thread_local CharT empty_char = CharT();
-	const CharT* whole_begin_ptr = (total_len > 0) ? &(*whole_first) : &empty_char;
+	const CharT* whole_begin_ptr = (total_len > 0) ? subject_buf.c_str() : &empty_char;
 	const CharT* end_ptr = whole_begin_ptr + total_len;
 	const CharT* start_ptr = whole_begin_ptr + search_offset;
 
@@ -765,10 +770,13 @@ bool regex_match(
 	// Iterator distance (number of characters)
 	size_type len = std::distance(first, last);
 
-	// Get pointer to the search target
+	// Copy the subject range into a temporary contiguous buffer to support
+	// non-contiguous BidirectionalIterators (e.g., std::list, std::deque)
+	std::basic_string<CharT> subject_buf(first, last);
+
 	// Use stable static buffer for empty ranges to avoid passing nullptr to C API
 	static thread_local CharT empty_char = CharT();
-	const CharT* start_ptr = (len > 0) ? &(*first) : &empty_char;
+	const CharT* start_ptr = (len > 0) ? subject_buf.c_str() : &empty_char;
 	const CharT* end_ptr = start_ptr + len;
 
 	// Cast to Oniguruma pointers
@@ -1289,5 +1297,59 @@ template std::back_insert_iterator<std::basic_string<char32_t>> regex_replace<
 	std::back_insert_iterator<std::basic_string<char32_t>>, u32_iter, u32_iter,
 	const basic_regex<char32_t, regex_traits<char32_t>>&,
 	const char32_t*, regex_constants::match_flag_type);
+
+} // namespace onigpp
+
+// -------------------- Explicit instantiations for non-contiguous iterators --------------------
+// Add explicit instantiations for std::list and std::deque to support non-contiguous containers
+// These are outside the onigpp namespace to properly reference std:: types
+// ---------------------------------------------------------------------------
+
+#include <list>
+#include <deque>
+#include <vector>
+
+namespace onigpp {
+
+// Aliases for std::list iterators
+using list_char_iter = ::std::list<char>::iterator;
+using list_char_sub_alloc = ::std::allocator<sub_match<list_char_iter>>;
+
+// Aliases for std::deque iterators
+using deque_char_iter = ::std::deque<char>::iterator;
+using deque_char_sub_alloc = ::std::allocator<sub_match<deque_char_iter>>;
+
+// Aliases for std::vector iterators (non-const)
+using vector_char_iter = ::std::vector<char>::iterator;
+using vector_char_sub_alloc = ::std::allocator<sub_match<vector_char_iter>>;
+
+// regex_search instantiations for std::list<char>::iterator
+template bool regex_search<list_char_iter, list_char_sub_alloc, char, regex_traits<char>>(
+	list_char_iter, list_char_iter, match_results<list_char_iter, list_char_sub_alloc>&, 
+	const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
+
+// regex_match instantiations for std::deque<char>::iterator
+template bool regex_match<deque_char_iter, deque_char_sub_alloc, char, regex_traits<char>>(
+	deque_char_iter, deque_char_iter, match_results<deque_char_iter, deque_char_sub_alloc>&, 
+	const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
+
+// regex_search instantiations for std::deque<char>::iterator
+template bool regex_search<deque_char_iter, deque_char_sub_alloc, char, regex_traits<char>>(
+	deque_char_iter, deque_char_iter, match_results<deque_char_iter, deque_char_sub_alloc>&, 
+	const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
+
+// regex_search instantiations for std::vector<char>::iterator (non-const)
+template bool regex_search<vector_char_iter, vector_char_sub_alloc, char, regex_traits<char>>(
+	vector_char_iter, vector_char_iter, match_results<vector_char_iter, vector_char_sub_alloc>&, 
+	const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
+
+// regex_iterator instantiations for std::list<char>::iterator
+template class regex_iterator<list_char_iter, char, regex_traits<char>>;
+
+// _regex_search_with_context instantiation for std::list (needed by regex_iterator)
+template bool _regex_search_with_context<list_char_iter, list_char_sub_alloc, char, regex_traits<char>>(
+	list_char_iter, list_char_iter, list_char_iter, 
+	match_results<list_char_iter, list_char_sub_alloc>&, 
+	const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
 
 } // namespace onigpp

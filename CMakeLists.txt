@@ -83,5 +83,9 @@ add_test(
 	NAME test3
 	COMMAND $<TARGET_FILE:cyclic_replace>
 	WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
+add_test(
+	NAME test4
+	COMMAND $<TARGET_FILE:onigpp_bidir_iterator_test>
+	WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
 
 ##############################################################################
