@@ -6,6 +6,7 @@
 #include <iterator>
 #include <memory>
 #include <cctype>
+#include <type_traits>
 
 namespace onigpp {
 
