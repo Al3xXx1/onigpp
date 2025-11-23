@@ -6,10 +6,6 @@
 #include <iterator>
 #include <memory>
 
-#ifndef ONIGPP_HEADER_INLINE
-	#define ONIGPP_HEADER_INLINE
-#endif
-
 namespace onigpp {
 
 ////////////////////////////////////////////
@@ -28,7 +24,7 @@ struct regex_access : public basic_regex<CharT, Traits> {
 
 // Helper function to expand capture groups ($1, $2, ... or \1, \2, ...) in the replacement string
 template <class CharT>
-ONIGPP_HEADER_INLINE void _append_replacement(
+void _append_replacement(
 	basic_string<CharT>& result,
 	const basic_string<CharT>& fmt,
 	const match_results<const CharT*>& m,
@@ -170,18 +166,18 @@ ONIGPP_HEADER_INLINE void _append_replacement(
 // Helper template function specializations for C++11 compatibility
 // Forward declaration of the primary template
 template <class CharT>
-ONIGPP_HEADER_INLINE OnigEncoding _get_default_encoding_from_char_type_impl();
+OnigEncoding _get_default_encoding_from_char_type_impl();
 
 // Note: Only the explicit specializations below for char, wchar_t, char16_t, 
 // and char32_t should be used.
 
 template <>
-ONIGPP_HEADER_INLINE OnigEncoding _get_default_encoding_from_char_type_impl<char>() {
+OnigEncoding _get_default_encoding_from_char_type_impl<char>() {
 	return ONIG_ENCODING_UTF8; // Default is UTF-8
 }
 
 template <>
-ONIGPP_HEADER_INLINE OnigEncoding _get_default_encoding_from_char_type_impl<wchar_t>() {
+OnigEncoding _get_default_encoding_from_char_type_impl<wchar_t>() {
 	// Use UTF-16 or UTF-32 depending on wchar_t size and endianness
 	if (sizeof(wchar_t) == 2) {
 		#if defined(_WIN32) || defined(__LITTLE_ENDIAN__) || \
@@ -202,7 +198,7 @@ ONIGPP_HEADER_INLINE OnigEncoding _get_default_encoding_from_char_type_impl<wcha
 }
 
 template <>
-ONIGPP_HEADER_INLINE OnigEncoding _get_default_encoding_from_char_type_impl<char16_t>() {
+OnigEncoding _get_default_encoding_from_char_type_impl<char16_t>() {
 	#if defined(_WIN32) || defined(__LITTLE_ENDIAN__) || \
 		(defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 	return ONIG_ENCODING_UTF16_LE;
@@ -212,7 +208,7 @@ ONIGPP_HEADER_INLINE OnigEncoding _get_default_encoding_from_char_type_impl<char
 }
 
 template <>
-ONIGPP_HEADER_INLINE OnigEncoding _get_default_encoding_from_char_type_impl<char32_t>() {
+OnigEncoding _get_default_encoding_from_char_type_impl<char32_t>() {
 	#if defined(_WIN32) || defined(__LITTLE_ENDIAN__) || \
 		(defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 	return ONIG_ENCODING_UTF32_LE;
@@ -222,7 +218,7 @@ ONIGPP_HEADER_INLINE OnigEncoding _get_default_encoding_from_char_type_impl<char
 }
 
 template <class CharT>
-ONIGPP_HEADER_INLINE OnigEncoding _get_default_encoding_from_char_type() {
+OnigEncoding _get_default_encoding_from_char_type() {
 	return _get_default_encoding_from_char_type_impl<CharT>();
 }
 
@@ -230,7 +226,7 @@ ONIGPP_HEADER_INLINE OnigEncoding _get_default_encoding_from_char_type() {
 // whole_first: iterator pointing to the beginning of the entire subject string
 // search_start: iterator where search should begin (may be >= whole_first)
 template <class BidirIt, class Alloc, class CharT, class Traits>
-ONIGPP_HEADER_INLINE bool _regex_search_with_context(
+bool _regex_search_with_context(
 	BidirIt whole_first, BidirIt search_start, BidirIt last,
 	match_results<BidirIt, Alloc>& m,
 	const basic_regex<CharT, Traits>& e,
@@ -326,7 +322,7 @@ ONIGPP_HEADER_INLINE bool _regex_search_with_context(
 // Implementation of basic_regex
 
 template <class CharT, class Traits>
-ONIGPP_HEADER_INLINE OnigOptionType basic_regex<CharT, Traits>::_options_from_flags(flag_type f) {
+OnigOptionType basic_regex<CharT, Traits>::_options_from_flags(flag_type f) {
 	bool icase = (f & regex_constants::icase);
 	bool multiline = (f & regex_constants::multiline);
 	bool extended = (f & regex_constants::extended);
@@ -339,7 +335,7 @@ ONIGPP_HEADER_INLINE OnigOptionType basic_regex<CharT, Traits>::_options_from_fl
 }
 
 template <class CharT, class Traits>
-ONIGPP_HEADER_INLINE basic_regex<CharT, Traits>::basic_regex(const CharT* s, size_type count, flag_type f, OnigEncoding enc) 
+basic_regex<CharT, Traits>::basic_regex(const CharT* s, size_type count, flag_type f, OnigEncoding enc) 
 	: m_regex(nullptr), m_encoding(nullptr), m_flags(f), m_pattern(s, count)
 {
 	OnigSyntaxType* syntax = ONIG_SYNTAX_ONIGURUMA;
@@ -352,7 +348,7 @@ ONIGPP_HEADER_INLINE basic_regex<CharT, Traits>::basic_regex(const CharT* s, siz
 }
 
 template <class CharT, class Traits>
-ONIGPP_HEADER_INLINE basic_regex<CharT, Traits>::basic_regex(const self_type& other) 
+basic_regex<CharT, Traits>::basic_regex(const self_type& other) 
 	: m_regex(nullptr), m_encoding(other.m_encoding), m_flags(other.m_flags), m_pattern(other.m_pattern)
 {
 	if (!other.m_regex) return; // If the original object is invalid
@@ -370,7 +366,7 @@ ONIGPP_HEADER_INLINE basic_regex<CharT, Traits>::basic_regex(const self_type& ot
 }
 
 template <class CharT, class Traits>
-ONIGPP_HEADER_INLINE basic_regex<CharT, Traits>::basic_regex(self_type&& other) noexcept
+basic_regex<CharT, Traits>::basic_regex(self_type&& other) noexcept
 	: m_regex(other.m_regex), m_encoding(other.m_encoding), m_flags(other.m_flags), m_pattern(std::move(other.m_pattern))
 {
 	// leave other in safe state
@@ -382,7 +378,7 @@ ONIGPP_HEADER_INLINE basic_regex<CharT, Traits>::basic_regex(self_type&& other) 
 
 // move assignment
 template <class CharT, class Traits>
-ONIGPP_HEADER_INLINE basic_regex<CharT, Traits>& basic_regex<CharT, Traits>::operator=(self_type&& other) noexcept {
+basic_regex<CharT, Traits>& basic_regex<CharT, Traits>::operator=(self_type&& other) noexcept {
 	if (this == &other) return *this;
 
 	// free current resource if any (check nullptr)
@@ -410,7 +406,7 @@ ONIGPP_HEADER_INLINE basic_regex<CharT, Traits>& basic_regex<CharT, Traits>::ope
 }
 
 template <class CharT, class Traits>
-ONIGPP_HEADER_INLINE basic_regex<CharT, Traits>::~basic_regex() {
+basic_regex<CharT, Traits>::~basic_regex() {
 	if (m_regex) {
 		onig_free(m_regex);
 		m_regex = nullptr;
@@ -418,7 +414,7 @@ ONIGPP_HEADER_INLINE basic_regex<CharT, Traits>::~basic_regex() {
 }
 
 template <class CharT, class Traits>
-ONIGPP_HEADER_INLINE unsigned basic_regex<CharT, Traits>::mark_count() const {
+unsigned basic_regex<CharT, Traits>::mark_count() const {
 	if (!m_regex) return 0;
 	return onig_number_of_captures(m_regex);
 }
@@ -430,7 +426,7 @@ ONIGPP_HEADER_INLINE unsigned basic_regex<CharT, Traits>::mark_count() const {
 //   - wchar_t/char16_t/char32_t with UTF-16/32: 2/4 bytes per unit
 
 template <class BidirIt, class Alloc, class CharT, class Traits>
-ONIGPP_HEADER_INLINE bool regex_search(
+bool regex_search(
 	BidirIt first, BidirIt last,
 	match_results<BidirIt, Alloc>& m,
 	const basic_regex<CharT, Traits>& e,
@@ -444,7 +440,7 @@ ONIGPP_HEADER_INLINE bool regex_search(
 // regex_match implementation
 
 template <class BidirIt, class Alloc, class CharT, class Traits>
-ONIGPP_HEADER_INLINE bool regex_match(
+bool regex_match(
 	BidirIt first, BidirIt last,
 	match_results<BidirIt, Alloc>& m,
 	const basic_regex<CharT, Traits>& e,
@@ -550,7 +546,7 @@ ONIGPP_HEADER_INLINE bool regex_match(
 // regex_replace implementation
 
 template <class OutputIt, class BidirIt, class CharT, class Traits>
-ONIGPP_HEADER_INLINE OutputIt regex_replace(
+OutputIt regex_replace(
 	OutputIt out,
 	BidirIt first, BidirIt last,
 	const basic_regex<CharT, Traits>& e,
@@ -631,7 +627,7 @@ ONIGPP_HEADER_INLINE OutputIt regex_replace(
 // Implementation of regex_iterator
 
 template <class BidirIt, class CharT, class Traits>
-ONIGPP_HEADER_INLINE void regex_iterator<BidirIt, CharT, Traits>::do_search(BidirIt first, BidirIt last) {
+void regex_iterator<BidirIt, CharT, Traits>::do_search(BidirIt first, BidirIt last) {
 	// If no match found, or end iterator reached
 	if (first == last || !_regex_search_with_context(m_begin, first, last, m_results, *m_regex, m_flags)) {
 		// Invalidate as end iterator
@@ -641,7 +637,7 @@ ONIGPP_HEADER_INLINE void regex_iterator<BidirIt, CharT, Traits>::do_search(Bidi
 }
 
 template <class BidirIt, class CharT, class Traits>
-ONIGPP_HEADER_INLINE regex_iterator<BidirIt, CharT, Traits>::regex_iterator(
+regex_iterator<BidirIt, CharT, Traits>::regex_iterator(
 	BidirIt first, BidirIt last,
 	const regex_type& re,
 	match_flag_type flags)
@@ -652,7 +648,7 @@ ONIGPP_HEADER_INLINE regex_iterator<BidirIt, CharT, Traits>::regex_iterator(
 }
 
 template <class BidirIt, class CharT, class Traits>
-ONIGPP_HEADER_INLINE bool regex_iterator<BidirIt, CharT, Traits>::operator==(const regex_iterator& other) const {
+bool regex_iterator<BidirIt, CharT, Traits>::operator==(const regex_iterator& other) const {
 	// Check for end iterator
 	if (m_regex == nullptr && other.m_regex == nullptr) return true;
 	if (m_regex == nullptr || other.m_regex == nullptr) return false;
@@ -665,7 +661,7 @@ ONIGPP_HEADER_INLINE bool regex_iterator<BidirIt, CharT, Traits>::operator==(con
 }
 
 template <class BidirIt, class CharT, class Traits>
-ONIGPP_HEADER_INLINE regex_iterator<BidirIt, CharT, Traits>& regex_iterator<BidirIt, CharT, Traits>::operator++() {
+regex_iterator<BidirIt, CharT, Traits>& regex_iterator<BidirIt, CharT, Traits>::operator++() {
 	if (m_regex == nullptr || m_results.empty()) {
 		return *this;
 	}
@@ -692,7 +688,7 @@ ONIGPP_HEADER_INLINE regex_iterator<BidirIt, CharT, Traits>& regex_iterator<Bidi
 }
 
 template <class BidirIt, class CharT, class Traits>
-ONIGPP_HEADER_INLINE regex_iterator<BidirIt, CharT, Traits> regex_iterator<BidirIt, CharT, Traits>::operator++(int) {
+regex_iterator<BidirIt, CharT, Traits> regex_iterator<BidirIt, CharT, Traits>::operator++(int) {
 	regex_iterator tmp = *this;
 	++(*this);
 	return tmp;
@@ -702,7 +698,7 @@ ONIGPP_HEADER_INLINE regex_iterator<BidirIt, CharT, Traits> regex_iterator<Bidir
 // Implementation of regex_token_iterator
 
 template <class BidirIt, class CharT, class Traits>
-ONIGPP_HEADER_INLINE void regex_token_iterator<BidirIt, CharT, Traits>::_do_increment() {
+void regex_token_iterator<BidirIt, CharT, Traits>::_do_increment() {
 	// Detect processed mark (after suffix output)
 	if (!m_subs.empty() && m_subs[0] == -2) {
 		m_subs.clear();
@@ -777,7 +773,7 @@ ONIGPP_HEADER_INLINE void regex_token_iterator<BidirIt, CharT, Traits>::_do_incr
 }
 
 template <class BidirIt, class CharT, class Traits>
-ONIGPP_HEADER_INLINE regex_token_iterator<BidirIt, CharT, Traits>::regex_token_iterator(
+regex_token_iterator<BidirIt, CharT, Traits>::regex_token_iterator(
 	BidirIt first, BidirIt last,
 	const regex_type& re,
 	const std::vector<int>& subs,
@@ -810,7 +806,7 @@ ONIGPP_HEADER_INLINE regex_token_iterator<BidirIt, CharT, Traits>::regex_token_i
 }
 
 template <class BidirIt, class CharT, class Traits>
-ONIGPP_HEADER_INLINE bool regex_token_iterator<BidirIt, CharT, Traits>::operator==(const regex_token_iterator& other) const {
+bool regex_token_iterator<BidirIt, CharT, Traits>::operator==(const regex_token_iterator& other) const {
 	// Check for termination
 	if (m_subs.empty() && other.m_subs.empty()) return true;
 	if (m_subs.empty() || other.m_subs.empty()) return false;
@@ -822,13 +818,13 @@ ONIGPP_HEADER_INLINE bool regex_token_iterator<BidirIt, CharT, Traits>::operator
 }
 
 template <class BidirIt, class CharT, class Traits>
-ONIGPP_HEADER_INLINE regex_token_iterator<BidirIt, CharT, Traits>& regex_token_iterator<BidirIt, CharT, Traits>::operator++() {
+regex_token_iterator<BidirIt, CharT, Traits>& regex_token_iterator<BidirIt, CharT, Traits>::operator++() {
 	_do_increment();
 	return *this;
 }
 
 template <class BidirIt, class CharT, class Traits>
-ONIGPP_HEADER_INLINE regex_token_iterator<BidirIt, CharT, Traits> regex_token_iterator<BidirIt, CharT, Traits>::operator++(int) {
+regex_token_iterator<BidirIt, CharT, Traits> regex_token_iterator<BidirIt, CharT, Traits>::operator++(int) {
 	regex_token_iterator tmp = *this;
 	++(*this);
 	return tmp;
@@ -837,7 +833,7 @@ ONIGPP_HEADER_INLINE regex_token_iterator<BidirIt, CharT, Traits> regex_token_it
 ////////////////////////////////////////////
 // onigpp::init
 
-ONIGPP_HEADER_INLINE int init(const OnigEncoding *encodings, size_type encodings_count) {
+int init(const OnigEncoding *encodings, size_type encodings_count) {
 	static OnigEncoding use_encodings[] = {
 #define SUPPORTED_ENCODING(enc) enc,
 #include "encodings.h"
@@ -857,12 +853,12 @@ ONIGPP_HEADER_INLINE int init(const OnigEncoding *encodings, size_type encodings
 ////////////////////////////////////////////
 // onigpp::uninit
 
-ONIGPP_HEADER_INLINE void uninit() { onig_end(); }
+void uninit() { onig_end(); }
 
 ////////////////////////////////////////////
 // onigpp::version
 
-ONIGPP_HEADER_INLINE const char* version() { return onig_version(); }
+const char* version() { return onig_version(); }
 
 // -------------------- Explicit template instantiations --------------------
 // Instantiates for: char, wchar_t, char16_t, char32_t
