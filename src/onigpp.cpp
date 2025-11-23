@@ -351,9 +351,49 @@ ONIGPP_HEADER_INLINE basic_regex<CharT, Traits>::basic_regex(const self_type& ot
 }
 
 template <class CharT, class Traits>
+ONIGPP_HEADER_INLINE basic_regex<CharT, Traits>::basic_regex(self_type&& other) noexcept : m_regex(other.m_regex), m_encoding(other.m_encoding), m_flags(other.m_flags), m_pattern(std::move(other.m_pattern))
+{
+	// leave other in safe state
+	other.m_regex = nullptr;
+	other.m_encoding = nullptr;
+	other.m_flags = regex_constants::normal;
+	other.m_pattern.clear();
+}
+
+// move assignment
+template <class CharT, class Traits>
+ONIGPP_HEADER_INLINE basic_regex<CharT, Traits>& basic_regex<CharT, Traits>::operator=(self_type&& other) noexcept {
+	if (this == &other) return *this;
+
+	// free current resource if any (check nullptr)
+	if (m_regex) {
+		// Use the appropriate Oniguruma API to free compiled regex.
+		// If onig_free accepts nullptr safely then check is optional,
+		// but checking avoids relying on that guarantee.
+		onig_free(m_regex);
+		m_regex = nullptr;
+	}
+
+	// steal resources
+	m_regex = other.m_regex;
+	m_encoding = other.m_encoding;
+	m_flags = other.m_flags;
+	m_pattern = std::move(other.m_pattern);
+
+	// reset other to safe state
+	other.m_regex = nullptr;
+	other.m_encoding = nullptr;
+	other.m_flags = regex_constants::normal;
+	other.m_pattern.clear();
+
+	return *this;
+}
+
+template <class CharT, class Traits>
 ONIGPP_HEADER_INLINE basic_regex<CharT, Traits>::~basic_regex() {
 	if (m_regex) {
 		onig_free(m_regex);
+		m_regex = nullptr;
 	}
 }
 
