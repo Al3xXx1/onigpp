@@ -48,12 +48,10 @@ add_subdirectory(tests)
 add_test(
     NAME test1
     COMMAND $<TARGET_FILE:onigpp_test>
-    CONFIGURATIONS Debug
     WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
 add_test(
     NAME test2
     COMMAND $<TARGET_FILE:onigpp_testw>
-    CONFIGURATIONS Debug
     WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
 
 ##############################################################################
