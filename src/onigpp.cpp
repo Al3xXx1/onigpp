@@ -5,6 +5,7 @@
 #include "../onigpp.h"
 #include <iterator>
 #include <memory>
+#include <cctype>
 
 namespace onigpp {
 
@@ -323,9 +324,9 @@ bool _regex_search_with_context(
 
 template <class CharT, class Traits>
 OnigOptionType basic_regex<CharT, Traits>::_options_from_flags(flag_type f) {
-	bool icase = (f & regex_constants::icase);
-	bool multiline = (f & regex_constants::multiline);
-	bool extended = (f & regex_constants::extended);
+	bool icase = !!(f & regex_constants::icase);
+	bool multiline = !!(f & regex_constants::multiline);
+	bool extended = !!(f & regex_constants::extended);
 
 	OnigOptionType options = 0;
 	options |= (icase ? ONIG_OPTION_IGNORECASE : 0);

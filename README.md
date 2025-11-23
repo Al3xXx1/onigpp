@@ -29,6 +29,12 @@ cmake --build build -t test
 
 - [onigpp.h](onigpp.h)
 
+## Platforms
+
+- Windows (Visual Studio 2015 and later)
+- Linux
+- macOS
+
 ## License
 
 - BSD-2-Clause
