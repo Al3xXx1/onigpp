@@ -2,7 +2,9 @@
 
 Version 6.9.10 — 2024/06/26
 
+```c
 #include <oniguruma.h>
+```
 
 This document summarizes the primary Oniguruma C API (function signatures, arguments, return values and notable behaviors). It is derived from API.txt (English) and API_ja.txt (Japanese) in this repository.
 
