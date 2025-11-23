@@ -88,7 +88,8 @@ namespace regex_constants {
 	static constexpr match_flag_type format_literal = (1 << 10);
 
 	// Default values
-	static constexpr syntax_option_type normal = 0;
+	// Note: In std::regex, ECMAScript is the default grammar when no flags are specified
+	static constexpr syntax_option_type normal = ECMAScript;
 	static constexpr match_flag_type format_default = 0;
 	static constexpr match_flag_type match_default = 0;
 }
