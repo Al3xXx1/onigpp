@@ -11,9 +11,6 @@
 #include <cstring>
 #include <cassert>
 
-// C++11 compatibility
-#include "src/onigpp_compat.h"
-
 // Oniguruma
 #define ONIG_ESCAPE_UCHAR_COLLISION // Use UnigUChar instead of UChar
 #define ONIG_ESCAPE_REGEX_T_COLLISION // Use OnigRegexType instead of regex_t
