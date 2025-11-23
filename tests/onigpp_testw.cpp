@@ -338,12 +338,9 @@ int main() {
 	std::setlocale(LC_ALL, "");
 #endif
 
-	// Oniguruma initialization (C API)
-	int r = onig_initialize(NULL, 0);
-	if (r != ONIG_NORMAL) {
-		std::wcerr << L"Oniguruma initialization failed! Error: " << r << std::endl;
-		return 1;
-	}
+	// Oniguruma initialization
+	onigpp::auto_init auto_init;
+
 	std::wcerr << L"========================================================\n";
 	std::wcerr << L" Starting onigpp.h Wide-character Test Suite\n";
 	std::wcerr << L"========================================================\n";
@@ -354,9 +351,6 @@ int main() {
 	TestReplacement();
 	TestSpecialReplacementPatterns();
 	TestEncodingAndError();
-
-	// Oniguruma finalization
-	onig_end();
 
 	std::wcerr << L"\n========================================================\n";
 	std::wcerr << L"✨ All wide-character tests succeeded.\n";

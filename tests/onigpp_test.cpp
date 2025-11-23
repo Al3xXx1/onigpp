@@ -380,11 +380,8 @@ int main() {
 #endif
 
 	// Oniguruma library initialization (required)
-	int r = onig_initialize(NULL, 0);
-	if (r != ONIG_NORMAL) {
-		std::cerr << "Oniguruma initialization failed! Error: " << r << std::endl;
-		return 1;
-	}
+	onigpp::auto_init auto_init;
+
 	std::cerr << "========================================================\n";
 	std::cerr << " Starting onigpp.h Comprehensive Test Suite\n";
 	std::cerr << "========================================================\n";
@@ -395,9 +392,6 @@ int main() {
 	TestReplacement();
 	TestSpecialReplacementPatterns();
 	TestEncodingAndError();
-
-	// Oniguruma library finalization
-	onig_end();
 
 	std::cerr << "\n========================================================\n";
 	std::cerr << "✨ All tests succeeded.\n";
