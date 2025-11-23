@@ -336,7 +336,10 @@ OnigOptionType basic_regex<CharT, Traits>::_options_from_flags(flag_type f) {
 }
 
 template <class CharT, class Traits>
-basic_regex<CharT, Traits>::basic_regex(const CharT* s, size_type count, flag_type f, OnigEncoding enc) 
+basic_regex<CharT, Traits>::basic_regex(const string_type& s, flag_type f, OnigEncoding enc) : basic_regex(s.c_str(), s.length(), f, enc) { }
+
+template <class CharT, class Traits>
+basic_regex<CharT, Traits>::basic_regex(const CharT* s, size_type count, flag_type f, OnigEncoding enc)
 	: m_regex(nullptr), m_encoding(nullptr), m_flags(f), m_pattern(s, count)
 {
 	OnigSyntaxType* syntax = ONIG_SYNTAX_ONIGURUMA;
