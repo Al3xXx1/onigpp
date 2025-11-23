@@ -529,12 +529,23 @@ inline basic_string<CharT> regex_replace(
 	return result;
 }
 
-// Overload taking C-string
+// Overload taking C-string input and basic_string format
 template <class CharT, class Traits>
 inline basic_string<CharT> regex_replace(
 	const CharT* s,
 	const basic_regex<CharT, Traits>& e,
 	const basic_string<CharT>& fmt,
+	regex_constants::match_flag_type flags = regex_constants::match_default)
+{
+	return regex_replace(basic_string<CharT>(s), e, fmt, flags);
+}
+
+// Overload taking C-string input and C-string format
+template <class CharT, class Traits>
+inline basic_string<CharT> regex_replace(
+	const CharT* s,
+	const basic_regex<CharT, Traits>& e,
+	const CharT* fmt,
 	regex_constants::match_flag_type flags = regex_constants::match_default)
 {
 	return regex_replace(basic_string<CharT>(s), e, fmt, flags);
