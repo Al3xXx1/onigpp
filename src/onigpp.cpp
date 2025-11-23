@@ -48,6 +48,31 @@ struct regex_access : public basic_regex<CharT, Traits> {
 	}
 };
 
+// Helper trait to detect contiguous iterators (for optimization)
+// In C++11, we conservatively detect only pointer types as contiguous
+// This avoids complexity while still optimizing the most common case
+
+// Primary template - assume non-contiguous
+template <typename Iter>
+struct is_contiguous_iterator : std::false_type {};
+
+// Specialization for pointer types (always contiguous)
+template <typename T>
+struct is_contiguous_iterator<T*> : std::true_type {};
+
+template <typename T>
+struct is_contiguous_iterator<const T*> : std::true_type {};
+
+// Helper function to get pointer from contiguous iterator (enabled only for pointer types)
+template <typename Iter>
+typename std::enable_if<
+	is_contiguous_iterator<Iter>::value,
+	Iter
+>::type
+get_contiguous_pointer(Iter it) {
+	return it;  // For pointers, just return the pointer itself
+}
+
 // Helper function to expand capture groups ($1, $2, ... or \1, \2, ...) in the replacement string
 template <class CharT>
 void _append_replacement(
@@ -248,30 +273,22 @@ OnigEncoding _get_default_encoding_from_char_type() {
 	return _get_default_encoding_from_char_type_impl<CharT>();
 }
 
-// This performs search using Oniguruma's str/end/start parameters correctly.
-// whole_first: iterator pointing to the beginning of the entire subject string
-// search_start: iterator where search should begin (may be >= whole_first)
-// Note: Supports arbitrary BidirectionalIterators by copying to a temporary buffer
+// Internal implementation for non-contiguous iterators (uses buffer copy)
 template <class BidirIt, class Alloc, class CharT, class Traits>
-bool _regex_search_with_context(
+typename std::enable_if<
+	!is_contiguous_iterator<BidirIt>::value,
+	bool
+>::type
+_regex_search_with_context_impl(
 	BidirIt whole_first, BidirIt search_start, BidirIt last,
 	match_results<BidirIt, Alloc>& m,
 	const basic_regex<CharT, Traits>& e,
-	regex_constants::match_flag_type flags)
+	regex_constants::match_flag_type flags,
+	OnigRegex reg,
+	OnigOptionType onig_options,
+	size_type total_len,
+	size_type search_offset)
 {
-	// Get Oniguruma regex object (using accessor hack)
-	OnigRegex reg = regex_access<CharT, Traits>::get(e);
-	if (!reg) return false;
-
-	// Options before search execution
-	OnigOptionType onig_options = 0;
-	if (flags & regex_constants::match_not_bol) onig_options |= ONIG_OPTION_NOTBOL;
-	if (flags & regex_constants::match_not_eol) onig_options |= ONIG_OPTION_NOTEOL;
-
-	// Compute lengths
-	size_type total_len = std::distance(whole_first, last);
-	size_type search_offset = std::distance(whole_first, search_start);
-
 	// Copy the subject range into a temporary contiguous buffer to support
 	// non-contiguous BidirectionalIterators (e.g., std::list, std::deque)
 	std::basic_string<CharT> subject_buf(whole_first, last);
@@ -347,6 +364,126 @@ bool _regex_search_with_context(
 		std::memset(&einfo, 0, sizeof(einfo));
 		throw regex_error(r, einfo);
 	}
+}
+
+// Internal implementation for contiguous iterators (optimized, no buffer copy)
+template <class BidirIt, class Alloc, class CharT, class Traits>
+typename std::enable_if<
+	is_contiguous_iterator<BidirIt>::value,
+	bool
+>::type
+_regex_search_with_context_impl(
+	BidirIt whole_first, BidirIt search_start, BidirIt last,
+	match_results<BidirIt, Alloc>& m,
+	const basic_regex<CharT, Traits>& e,
+	regex_constants::match_flag_type flags,
+	OnigRegex reg,
+	OnigOptionType onig_options,
+	size_type total_len,
+	size_type search_offset)
+{
+	// Fast path: use direct pointer access for contiguous iterators
+	// Use stable static buffer for empty ranges to avoid passing nullptr to C API
+	static thread_local CharT empty_char = CharT();
+	const CharT* whole_begin_ptr = (total_len > 0) ? get_contiguous_pointer(whole_first) : &empty_char;
+	const CharT* end_ptr = whole_begin_ptr + total_len;
+	const CharT* start_ptr = whole_begin_ptr + search_offset;
+
+	const OnigUChar* u_start = reinterpret_cast<const OnigUChar*>(whole_begin_ptr);
+	const OnigUChar* u_end   = reinterpret_cast<const OnigUChar*>(end_ptr);
+	const OnigUChar* u_search_start = reinterpret_cast<const OnigUChar*>(start_ptr);
+	const OnigUChar* u_range = u_end; // Forward search range
+
+	// Allocate OnigRegion
+	OnigRegion* region = onig_region_new();
+	if (!region) throw std::bad_alloc();
+
+	// Execute search: pass whole begin as str, and search_start as start.
+	int r = onig_search(reg, u_start, u_end, u_search_start, u_range, region, onig_options);
+
+	if (r >= 0) {
+		if (flags & regex_constants::match_not_null) {
+			// If match length is zero, treat it as a match failure
+			if (region->beg[0] == region->end[0]) {
+				onig_region_free(region, 1);
+				return false; // Equivalent to ONIG_MISMATCH
+			}
+		}
+
+		// If matched, store results in match_results
+		m.m_str_begin = whole_first;
+		m.m_str_end = last;
+		m.clear();
+		m.resize(region->num_regs);
+
+		for (int i = 0; i < region->num_regs; ++i) {
+			int beg = region->beg[i];
+			int end = region->end[i];
+
+			if (beg != ONIG_REGION_NOTPOS) {
+				int beg_chars = beg / sizeof(CharT);
+				int end_chars = end / sizeof(CharT);
+
+				BidirIt sub_start = whole_first;
+				std::advance(sub_start, beg_chars);
+
+				BidirIt sub_end = whole_first;
+				std::advance(sub_end, end_chars);
+
+				m[i].first = sub_start;
+				m[i].second = sub_end;
+				m[i].matched = true;
+			} else {
+				m[i].first = last;
+				m[i].second = last;
+				m[i].matched = false;
+			}
+		}
+
+		onig_region_free(region, 1);
+		return true;
+	}
+	else if (r == ONIG_MISMATCH) {
+		onig_region_free(region, 1);
+		return false;
+	}
+	else {
+		// On error
+		onig_region_free(region, 1);
+		OnigErrorInfo einfo;
+		std::memset(&einfo, 0, sizeof(einfo));
+		throw regex_error(r, einfo);
+	}
+}
+
+// Public wrapper that dispatches to the appropriate implementation
+// This performs search using Oniguruma's str/end/start parameters correctly.
+// whole_first: iterator pointing to the beginning of the entire subject string
+// search_start: iterator where search should begin (may be >= whole_first)
+// Note: Optimized for contiguous iterators; uses buffer copy for non-contiguous iterators
+template <class BidirIt, class Alloc, class CharT, class Traits>
+bool _regex_search_with_context(
+	BidirIt whole_first, BidirIt search_start, BidirIt last,
+	match_results<BidirIt, Alloc>& m,
+	const basic_regex<CharT, Traits>& e,
+	regex_constants::match_flag_type flags)
+{
+	// Get Oniguruma regex object (using accessor hack)
+	OnigRegex reg = regex_access<CharT, Traits>::get(e);
+	if (!reg) return false;
+
+	// Options before search execution
+	OnigOptionType onig_options = 0;
+	if (flags & regex_constants::match_not_bol) onig_options |= ONIG_OPTION_NOTBOL;
+	if (flags & regex_constants::match_not_eol) onig_options |= ONIG_OPTION_NOTEOL;
+
+	// Compute lengths
+	size_type total_len = std::distance(whole_first, last);
+	size_type search_offset = std::distance(whole_first, search_start);
+
+	// Dispatch to the appropriate implementation based on iterator type
+	return _regex_search_with_context_impl(whole_first, search_start, last, m, e, flags,
+	                                       reg, onig_options, total_len, search_offset);
 }
 
 ////////////////////////////////////////////
@@ -750,26 +887,21 @@ bool regex_search(
 ////////////////////////////////////////////
 // regex_match implementation
 
+// Internal implementation for non-contiguous iterators (uses buffer copy)
 template <class BidirIt, class Alloc, class CharT, class Traits>
-bool regex_match(
+typename std::enable_if<
+	!is_contiguous_iterator<BidirIt>::value,
+	bool
+>::type
+_regex_match_impl(
 	BidirIt first, BidirIt last,
 	match_results<BidirIt, Alloc>& m,
 	const basic_regex<CharT, Traits>& e,
-	regex_constants::match_flag_type flags)
+	regex_constants::match_flag_type flags,
+	OnigRegex reg,
+	OnigOptionType onig_options,
+	size_type len)
 {
-	// Get Oniguruma regex object (using accessor hack)
-	OnigRegex reg = regex_access<CharT, Traits>::get(e);
-	if (!reg) return false;
-
-	// Options before search execution
-	OnigOptionType onig_options = 0;
-	// Extract Oniguruma options from match_flag_type
-	if (flags & regex_constants::match_not_bol) onig_options |= ONIG_OPTION_NOTBOL;
-	if (flags & regex_constants::match_not_eol) onig_options |= ONIG_OPTION_NOTEOL;
-
-	// Iterator distance (number of characters)
-	size_type len = std::distance(first, last);
-
 	// Copy the subject range into a temporary contiguous buffer to support
 	// non-contiguous BidirectionalIterators (e.g., std::list, std::deque)
 	std::basic_string<CharT> subject_buf(first, last);
@@ -854,6 +986,129 @@ bool regex_match(
 		std::memset(&einfo, 0, sizeof(einfo));
 		throw regex_error(r, einfo);
 	}
+}
+
+// Internal implementation for contiguous iterators (optimized, no buffer copy)
+template <class BidirIt, class Alloc, class CharT, class Traits>
+typename std::enable_if<
+	is_contiguous_iterator<BidirIt>::value,
+	bool
+>::type
+_regex_match_impl(
+	BidirIt first, BidirIt last,
+	match_results<BidirIt, Alloc>& m,
+	const basic_regex<CharT, Traits>& e,
+	regex_constants::match_flag_type flags,
+	OnigRegex reg,
+	OnigOptionType onig_options,
+	size_type len)
+{
+	// Fast path: use direct pointer access for contiguous iterators
+	// Use stable static buffer for empty ranges to avoid passing nullptr to C API
+	static thread_local CharT empty_char = CharT();
+	const CharT* start_ptr = (len > 0) ? get_contiguous_pointer(first) : &empty_char;
+	const CharT* end_ptr = start_ptr + len;
+
+	// Cast to Oniguruma pointers
+	const OnigUChar* u_start = reinterpret_cast<const OnigUChar*>(start_ptr);
+	const OnigUChar* u_end   = reinterpret_cast<const OnigUChar*>(end_ptr);
+
+	// Allocate OnigRegion
+	OnigRegion* region = onig_region_new();
+	if (!region) {
+		throw std::bad_alloc();
+	}
+
+	// Execute match
+	int r = onig_match(reg, u_start, u_end, u_start, region, onig_options);
+
+	if (r >= 0) {
+		// regex_match requires full match with the entire string
+		// Check if the match end position matches the string end
+		// region->end[0] is in bytes, so convert to characters for comparison
+		if (region->end[0] != (int)(len * sizeof(CharT))) {
+			onig_region_free(region, 1);
+			return false;
+		}
+
+		if (flags & regex_constants::match_not_null) {
+			// If match length is zero, treat it as a match failure
+			if (region->beg[0] == region->end[0]) {
+				onig_region_free(region, 1);
+				return false;
+			}
+		}
+
+		// If matched, store results in match_results
+		m.m_str_begin = first;
+		m.m_str_end = last;
+		m.clear();
+		m.resize(region->num_regs);
+
+		for (int i = 0; i < region->num_regs; ++i) {
+			int beg = region->beg[i];
+			int end = region->end[i];
+
+			if (beg != ONIG_REGION_NOTPOS) {
+				// Oniguruma returns byte offsets, convert to character offsets
+				int beg_chars = beg / sizeof(CharT);
+				int end_chars = end / sizeof(CharT);
+
+				BidirIt sub_start = first;
+				std::advance(sub_start, beg_chars);
+
+				BidirIt sub_end = first;
+				std::advance(sub_end, end_chars);
+
+				m[i].first = sub_start;
+				m[i].second = sub_end;
+				m[i].matched = true;
+			} else {
+				m[i].first = last;
+				m[i].second = last;
+				m[i].matched = false;
+			}
+		}
+
+		onig_region_free(region, 1);
+		return true;
+	}
+	else if (r == ONIG_MISMATCH) {
+		onig_region_free(region, 1);
+		return false;
+	}
+	else {
+		// On error
+		onig_region_free(region, 1);
+		OnigErrorInfo einfo;
+		std::memset(&einfo, 0, sizeof(einfo));
+		throw regex_error(r, einfo);
+	}
+}
+
+// Public wrapper that dispatches to the appropriate implementation
+template <class BidirIt, class Alloc, class CharT, class Traits>
+bool regex_match(
+	BidirIt first, BidirIt last,
+	match_results<BidirIt, Alloc>& m,
+	const basic_regex<CharT, Traits>& e,
+	regex_constants::match_flag_type flags)
+{
+	// Get Oniguruma regex object (using accessor hack)
+	OnigRegex reg = regex_access<CharT, Traits>::get(e);
+	if (!reg) return false;
+
+	// Options before search execution
+	OnigOptionType onig_options = 0;
+	// Extract Oniguruma options from match_flag_type
+	if (flags & regex_constants::match_not_bol) onig_options |= ONIG_OPTION_NOTBOL;
+	if (flags & regex_constants::match_not_eol) onig_options |= ONIG_OPTION_NOTEOL;
+
+	// Iterator distance (number of characters)
+	size_type len = std::distance(first, last);
+
+	// Dispatch to the appropriate implementation based on iterator type
+	return _regex_match_impl(first, last, m, e, flags, reg, onig_options, len);
 }
 
 ////////////////////////////////////////////
@@ -1310,9 +1565,16 @@ template std::back_insert_iterator<std::basic_string<char32_t>> regex_replace<
 
 namespace onigpp {
 
+// Aliases for pointer types (const char*)
+using cchar_ptr = const char*;
+using cchar_ptr_sub_alloc = ::std::allocator<sub_match<cchar_ptr>>;
+
 // Aliases for std::list iterators
 using list_char_iter = ::std::list<char>::iterator;
 using list_char_sub_alloc = ::std::allocator<sub_match<list_char_iter>>;
+
+using list_char_const_iter = ::std::list<char>::const_iterator;
+using list_char_const_sub_alloc = ::std::allocator<sub_match<list_char_const_iter>>;
 
 // Aliases for std::deque iterators
 using deque_char_iter = ::std::deque<char>::iterator;
@@ -1322,9 +1584,19 @@ using deque_char_sub_alloc = ::std::allocator<sub_match<deque_char_iter>>;
 using vector_char_iter = ::std::vector<char>::iterator;
 using vector_char_sub_alloc = ::std::allocator<sub_match<vector_char_iter>>;
 
+// regex_search instantiations for const char* (pointer type - optimized)
+template bool regex_search<cchar_ptr, cchar_ptr_sub_alloc, char, regex_traits<char>>(
+	cchar_ptr, cchar_ptr, match_results<cchar_ptr, cchar_ptr_sub_alloc>&, 
+	const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
+
 // regex_search instantiations for std::list<char>::iterator
 template bool regex_search<list_char_iter, list_char_sub_alloc, char, regex_traits<char>>(
 	list_char_iter, list_char_iter, match_results<list_char_iter, list_char_sub_alloc>&, 
+	const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
+
+// regex_search instantiations for std::list<char>::const_iterator
+template bool regex_search<list_char_const_iter, list_char_const_sub_alloc, char, regex_traits<char>>(
+	list_char_const_iter, list_char_const_iter, match_results<list_char_const_iter, list_char_const_sub_alloc>&, 
 	const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
 
 // regex_match instantiations for std::deque<char>::iterator
@@ -1349,6 +1621,12 @@ template class regex_iterator<list_char_iter, char, regex_traits<char>>;
 template bool _regex_search_with_context<list_char_iter, list_char_sub_alloc, char, regex_traits<char>>(
 	list_char_iter, list_char_iter, list_char_iter, 
 	match_results<list_char_iter, list_char_sub_alloc>&, 
+	const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
+
+// _regex_search_with_context instantiation for const char* (optimized path)
+template bool _regex_search_with_context<cchar_ptr, cchar_ptr_sub_alloc, char, regex_traits<char>>(
+	cchar_ptr, cchar_ptr, cchar_ptr, 
+	match_results<cchar_ptr, cchar_ptr_sub_alloc>&, 
 	const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
 
 } // namespace onigpp
