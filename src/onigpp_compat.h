@@ -8,7 +8,7 @@
 #include <utility>
 #include <cstddef>
 
-#if !defined(__cplusplus) || __cplusplus < 201402L
+#if __cplusplus < 201402L
 
 namespace std {
 
