@@ -337,7 +337,10 @@ OnigOptionType basic_regex<CharT, Traits>::_options_from_flags(flag_type f) {
 
 template <class CharT, class Traits>
 OnigSyntaxType* basic_regex<CharT, Traits>::_syntax_from_flags(flag_type f) {
-	// Priority order: pick the first matching explicit grammar flag
+	// Priority order: pick the first matching explicit grammar flag.
+	// If multiple grammar flags are set, the priority ensures stable, deterministic selection.
+	// Note: regex_constants::extended serves dual purpose - both POSIX extended grammar
+	// and free-spacing option (ONIG_OPTION_EXTEND), which is compatible with std::regex semantics.
 	if (f & regex_constants::basic)
 		return ONIG_SYNTAX_POSIX_BASIC;
 	else if (f & regex_constants::extended)
@@ -349,9 +352,9 @@ OnigSyntaxType* basic_regex<CharT, Traits>::_syntax_from_flags(flag_type f) {
 	else if (f & regex_constants::egrep)
 		return ONIG_SYNTAX_POSIX_EXTENDED; // egrep uses extended regex (grep -E)
 	else if (f & regex_constants::ECMAScript)
-		return ONIG_SYNTAX_ONIGURUMA;
+		return ONIG_SYNTAX_ONIGURUMA; // Use Oniguruma default for ECMAScript-like behavior
 	else
-		return ONIG_SYNTAX_ONIGURUMA;
+		return ONIG_SYNTAX_ONIGURUMA; // Default when no grammar flag specified
 }
 
 template <class CharT, class Traits>
