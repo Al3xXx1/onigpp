@@ -6,11 +6,36 @@
 #include <iterator>
 #include <memory>
 #include <cctype>
+#include <type_traits>
 
 namespace onigpp {
 
 ////////////////////////////////////////////
 // Implementation helpers
+
+// Helper templates for POSIX class expansion with SFINAE
+// Only enabled for char and wchar_t where std::ctype is available
+
+// Primary template - returns pattern unchanged for unsupported types
+template <class CharT, class Enable = void>
+struct posix_class_expander {
+	typedef std::basic_string<CharT> string_type;
+	static string_type expand(const std::locale& loc, const string_type& pattern) {
+		// For char16_t, char32_t, etc. - no locale support, return unchanged
+		return pattern;
+	}
+};
+
+// Specialization for char and wchar_t where std::ctype is available
+template <class CharT>
+struct posix_class_expander<CharT,
+	typename std::enable_if<
+		std::is_same<CharT, char>::value || std::is_same<CharT, wchar_t>::value
+	>::type>
+{
+	typedef std::basic_string<CharT> string_type;
+	static string_type expand(const std::locale& loc, const string_type& pattern);
+};
 
 // Helper to access protected members of basic_regex
 template <class CharT, class Traits>
@@ -362,20 +387,28 @@ basic_regex<CharT, Traits>::basic_regex(const string_type& s, flag_type f, OnigE
 
 template <class CharT, class Traits>
 basic_regex<CharT, Traits>::basic_regex(const CharT* s, size_type count, flag_type f, OnigEncoding enc)
-	: m_regex(nullptr), m_encoding(nullptr), m_flags(f), m_pattern(s, count)
+	: m_regex(nullptr), m_encoding(nullptr), m_flags(f), m_pattern(s, count), m_locale(std::locale())
 {
 	OnigSyntaxType* syntax = _syntax_from_flags(f);
 	OnigOptionType options = _options_from_flags(f);
 	OnigErrorInfo err_info;
 	if (!enc) enc = _get_default_encoding_from_char_type<CharT>();
 	m_encoding = enc;
-	int err = onig_new(&m_regex, reinterpret_cast<const OnigUChar*>(s), reinterpret_cast<const OnigUChar*>(s + count), options, enc, syntax, &err_info);
+	
+	// Preprocess pattern for locale support
+	string_type compiled_pattern = _preprocess_pattern_for_locale(m_pattern);
+	const CharT* pattern_ptr = compiled_pattern.c_str();
+	size_type pattern_len = compiled_pattern.length();
+	
+	int err = onig_new(&m_regex, reinterpret_cast<const OnigUChar*>(pattern_ptr), 
+	                   reinterpret_cast<const OnigUChar*>(pattern_ptr + pattern_len), 
+	                   options, enc, syntax, &err_info);
 	if (err != ONIG_NORMAL) throw regex_error(err, err_info);
 }
 
 template <class CharT, class Traits>
 basic_regex<CharT, Traits>::basic_regex(const self_type& other) 
-	: m_regex(nullptr), m_encoding(other.m_encoding), m_flags(other.m_flags), m_pattern(other.m_pattern)
+	: m_regex(nullptr), m_encoding(other.m_encoding), m_flags(other.m_flags), m_pattern(other.m_pattern), m_locale(other.m_locale)
 {
 	if (!other.m_regex) return; // If the original object is invalid
 
@@ -383,8 +416,10 @@ basic_regex<CharT, Traits>::basic_regex(const self_type& other)
 	OnigOptionType options = _options_from_flags(m_flags);
 	OnigErrorInfo err_info;
 
-	const CharT* s = m_pattern.c_str();
-	size_type count = m_pattern.length();
+	// Preprocess pattern for locale support
+	string_type compiled_pattern = _preprocess_pattern_for_locale(m_pattern);
+	const CharT* s = compiled_pattern.c_str();
+	size_type count = compiled_pattern.length();
 
 	int err = onig_new(&m_regex, reinterpret_cast<const OnigUChar*>(s), reinterpret_cast<const OnigUChar*>(s + count), 
 					   options, m_encoding, syntax, &err_info);
@@ -393,13 +428,15 @@ basic_regex<CharT, Traits>::basic_regex(const self_type& other)
 
 template <class CharT, class Traits>
 basic_regex<CharT, Traits>::basic_regex(self_type&& other) noexcept
-	: m_regex(other.m_regex), m_encoding(other.m_encoding), m_flags(other.m_flags), m_pattern(std::move(other.m_pattern))
+	: m_regex(other.m_regex), m_encoding(other.m_encoding), m_flags(other.m_flags), 
+	  m_pattern(std::move(other.m_pattern)), m_locale(std::move(other.m_locale))
 {
 	// leave other in safe state
 	other.m_regex = nullptr;
 	other.m_encoding = nullptr;
 	other.m_flags = regex_constants::normal;
 	other.m_pattern.clear();
+	other.m_locale = std::locale();
 }
 
 // move assignment
@@ -421,12 +458,14 @@ basic_regex<CharT, Traits>& basic_regex<CharT, Traits>::operator=(self_type&& ot
 	m_encoding = other.m_encoding;
 	m_flags = other.m_flags;
 	m_pattern = std::move(other.m_pattern);
+	m_locale = std::move(other.m_locale);
 
 	// reset other to safe state
 	other.m_regex = nullptr;
 	other.m_encoding = nullptr;
 	other.m_flags = regex_constants::normal;
 	other.m_pattern.clear();
+	other.m_locale = std::locale();
 
 	return *this;
 }
@@ -443,6 +482,247 @@ template <class CharT, class Traits>
 unsigned basic_regex<CharT, Traits>::mark_count() const {
 	if (!m_regex) return 0;
 	return onig_number_of_captures(m_regex);
+}
+
+template <class CharT, class Traits>
+typename basic_regex<CharT, Traits>::string_type 
+basic_regex<CharT, Traits>::_preprocess_pattern_for_locale(const string_type& pattern) const {
+	// Conservative POSIX character class expander for locale support
+	// Expands [:digit:], [:alpha:], [:alnum:], [:space:], [:upper:], [:lower:],
+	// [:punct:], [:xdigit:], [:cntrl:], [:print:] inside bracket expressions
+	//
+	// Note: Oniguruma natively supports POSIX character classes when using POSIX syntaxes.
+	// We only need to preprocess for other syntaxes (like Oniguruma default or ECMAScript).
+	// Check if we're using a POSIX syntax that already supports these classes.
+	OnigSyntaxType* syntax = _syntax_from_flags(m_flags);
+	if (syntax == ONIG_SYNTAX_POSIX_BASIC || syntax == ONIG_SYNTAX_POSIX_EXTENDED || 
+	    syntax == ONIG_SYNTAX_GREP) {
+		// These syntaxes natively support POSIX character classes, no preprocessing needed
+		return pattern;
+	}
+	
+	// Use SFINAE helper to only compile locale-based expansion for char and wchar_t
+	return posix_class_expander<CharT>::expand(m_locale, pattern);
+}
+
+// Implementation of POSIX class expansion for char and wchar_t
+template <class CharT>
+typename posix_class_expander<CharT,
+	typename std::enable_if<
+		std::is_same<CharT, char>::value || std::is_same<CharT, wchar_t>::value
+	>::type>::string_type
+posix_class_expander<CharT,
+	typename std::enable_if<
+		std::is_same<CharT, char>::value || std::is_same<CharT, wchar_t>::value
+	>::type>::expand(const std::locale& loc, const string_type& pattern) {
+	typedef std::basic_string<CharT> string_type;
+	typedef typename string_type::size_type size_type;
+	
+	string_type result;
+	result.reserve(pattern.size());
+	
+	const std::ctype<CharT>& ct = std::use_facet<std::ctype<CharT>>(loc);
+	
+	size_type i = 0;
+	const size_type len = pattern.size();
+	
+	// Helper lambda to compare strings
+	auto str_equals = [](const string_type& s, const char* literal) -> bool {
+		size_t lit_len = std::strlen(literal);
+		if (s.size() != lit_len) return false;
+		for (size_t j = 0; j < lit_len; ++j) {
+			if (s[j] != CharT(literal[j])) return false;
+		}
+		return true;
+	};
+	
+	while (i < len) {
+		if (pattern[i] == CharT('[')) {
+			// Start of bracket expression
+			result += pattern[i++];
+			
+			// Check for negation
+			if (i < len && pattern[i] == CharT('^')) {
+				result += pattern[i++];
+			}
+			
+			// Process inside bracket expression
+			while (i < len && pattern[i] != CharT(']')) {
+				// Check for POSIX class [:name:]
+				if (i + 2 < len && pattern[i] == CharT('[') && pattern[i+1] == CharT(':')) {
+					size_type class_start = i;
+					i += 2;
+					
+					// Find the end of POSIX class name
+					size_type name_start = i;
+					while (i < len && pattern[i] != CharT(':')) {
+						i++;
+					}
+					
+					if (i + 1 < len && pattern[i] == CharT(':') && pattern[i+1] == CharT(']')) {
+						// Found complete POSIX class
+						string_type class_name = pattern.substr(name_start, i - name_start);
+						i += 2; // skip ':]'
+						
+						// Expand the POSIX class based on locale
+						string_type expansion;
+						
+						// Test characters in a reasonable range.
+						// For 8-bit char: all 256 possible values (0-255)
+						// For wider types: limit to ASCII-compatible range for portability and performance
+						// (full Unicode character classification would be more complex and slower)
+						const int max_char = (sizeof(CharT) == 1) ? 256 : 128;
+						
+						// Determine which class we're dealing with
+						std::ctype_base::mask mask = 0;
+						bool recognized = false;
+						
+						if (str_equals(class_name, "digit")) {
+							mask = std::ctype_base::digit;
+							recognized = true;
+						} else if (str_equals(class_name, "alpha")) {
+							mask = std::ctype_base::alpha;
+							recognized = true;
+						} else if (str_equals(class_name, "alnum")) {
+							mask = std::ctype_base::alnum;
+							recognized = true;
+						} else if (str_equals(class_name, "space")) {
+							mask = std::ctype_base::space;
+							recognized = true;
+						} else if (str_equals(class_name, "upper")) {
+							mask = std::ctype_base::upper;
+							recognized = true;
+						} else if (str_equals(class_name, "lower")) {
+							mask = std::ctype_base::lower;
+							recognized = true;
+						} else if (str_equals(class_name, "punct")) {
+							mask = std::ctype_base::punct;
+							recognized = true;
+						} else if (str_equals(class_name, "xdigit")) {
+							mask = std::ctype_base::xdigit;
+							recognized = true;
+						} else if (str_equals(class_name, "cntrl")) {
+							mask = std::ctype_base::cntrl;
+							recognized = true;
+						} else if (str_equals(class_name, "print")) {
+							mask = std::ctype_base::print;
+							recognized = true;
+						}
+						
+						if (recognized) {
+							bool first_char = true;
+							for (int c = 0; c < max_char; ++c) {
+								CharT ch = static_cast<CharT>(c);
+								if (ct.is(mask, ch)) {
+									// Need to escape special regex characters inside bracket expressions
+									// Backslash, closing bracket always need escaping
+									if (ch == CharT('\\') || ch == CharT(']')) {
+										expansion += CharT('\\');
+										expansion += ch;
+									}
+									// Opening bracket needs escaping 
+									else if (ch == CharT('[')) {
+										expansion += CharT('\\');
+										expansion += ch;
+									}
+									// Braces need escaping in extended mode (for repetition syntax)
+									else if (ch == CharT('{') || ch == CharT('}')) {
+										expansion += CharT('\\');
+										expansion += ch;
+									}
+									// Caret only needs escaping at the beginning
+									else if (ch == CharT('^') && first_char) {
+										expansion += CharT('\\');
+										expansion += ch;
+									}
+									// Hyphen: place it at the end to avoid range issues
+									// We'll collect hyphens separately
+									else if (ch != CharT('-')) {
+										expansion += ch;
+									}
+									first_char = false;
+								}
+							}
+							
+							// Add hyphen at the end if it was in the character class
+							// At the end of a bracket expression, hyphen doesn't need escaping
+							for (int c = 0; c < max_char; ++c) {
+								CharT ch = static_cast<CharT>(c);
+								if (ch == CharT('-') && ct.is(mask, ch)) {
+									expansion += ch;
+									break;  // Only add one hyphen
+								}
+							}
+							
+							// If expansion is empty (no characters match the class),
+							// we need to ensure the bracket expression isn't empty to avoid
+							// "empty range in char class" errors.
+							// Use a non-printing character unlikely to appear in normal text.
+							static const CharT UNMATCHABLE_CHAR = CharT('\x7F'); // DEL character (ASCII 127)
+							if (expansion.empty()) {
+								expansion += UNMATCHABLE_CHAR;
+							}
+							
+							result += expansion;
+						} else {
+							// Not a recognized POSIX class, restore original
+							result += pattern.substr(class_start, i - class_start);
+						}
+					} else {
+						// Not a complete POSIX class, treat literally
+						result += pattern.substr(class_start, i - class_start);
+					}
+				} else {
+					// Regular character in bracket expression
+					result += pattern[i++];
+				}
+			}
+			
+			// Add closing bracket
+			if (i < len && pattern[i] == CharT(']')) {
+				result += pattern[i++];
+			}
+		} else {
+			// Outside bracket expression
+			result += pattern[i++];
+		}
+	}
+	
+	return result;
+}
+
+template <class CharT, class Traits>
+typename basic_regex<CharT, Traits>::locale_type 
+basic_regex<CharT, Traits>::imbue(locale_type loc) {
+	locale_type old_locale = m_locale;
+	m_locale = loc;
+	
+	// Recompile the regex if we have a pattern
+	if (!m_pattern.empty()) {
+		// Free existing regex
+		if (m_regex) {
+			onig_free(m_regex);
+			m_regex = nullptr;
+		}
+		
+		// Preprocess pattern with new locale
+		string_type compiled_pattern = _preprocess_pattern_for_locale(m_pattern);
+		
+		// Compile with the preprocessed pattern
+		OnigSyntaxType* syntax = _syntax_from_flags(m_flags);
+		OnigOptionType options = _options_from_flags(m_flags);
+		OnigErrorInfo err_info;
+		
+		const CharT* s = compiled_pattern.c_str();
+		size_type count = compiled_pattern.length();
+		
+		int err = onig_new(&m_regex, reinterpret_cast<const OnigUChar*>(s), 
+		                   reinterpret_cast<const OnigUChar*>(s + count), 
+		                   options, m_encoding, syntax, &err_info);
+		if (err != ONIG_NORMAL) throw regex_error(err, err_info);
+	}
+	
+	return old_locale;
 }
 
 ////////////////////////////////////////////

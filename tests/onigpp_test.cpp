@@ -405,6 +405,81 @@ void TestSyntaxSelection() {
 	TEST_CASE_END("TestSyntaxSelection")
 }
 
+// -----------------------------------------------------------------
+// 7. POSIX Character Class Tests
+// -----------------------------------------------------------------
+
+void TestPOSIXClasses() {
+	TEST_CASE("TestPOSIXClasses")
+
+	// 7.1. Test [:digit:] POSIX class
+	std::cerr << "  7.1. POSIX [:digit:] class:\n";
+	sregex re_digit(std::string("[[:digit:]]+"), op::regex_constants::extended);
+	smatch m_digit;
+	assert(op::regex_search(std::string("abc12345def"), m_digit, re_digit));
+	assert(m_digit[0].str() == "12345");
+	std::cerr << "  [:digit:] matched '12345'\n";
+	
+	// 7.2. Test [:alpha:] POSIX class
+	std::cerr << "  7.2. POSIX [:alpha:] class:\n";
+	sregex re_alpha(std::string("[[:alpha:]]+"), op::regex_constants::extended);
+	smatch m_alpha;
+	assert(op::regex_search(std::string("123abc456"), m_alpha, re_alpha));
+	assert(m_alpha[0].str() == "abc");
+	std::cerr << "  [:alpha:] matched 'abc'\n";
+	
+	// 7.3. Test [:alnum:] POSIX class
+	std::cerr << "  7.3. POSIX [:alnum:] class:\n";
+	sregex re_alnum(std::string("[[:alnum:]]+"), op::regex_constants::extended);
+	smatch m_alnum;
+	assert(op::regex_search(std::string("!@#abc123$%^"), m_alnum, re_alnum));
+	assert(m_alnum[0].str() == "abc123");
+	std::cerr << "  [:alnum:] matched 'abc123'\n";
+	
+	// 7.4. Test [:space:] POSIX class
+	std::cerr << "  7.4. POSIX [:space:] class:\n";
+	sregex re_space(std::string("[[:space:]]+"), op::regex_constants::extended);
+	smatch m_space;
+	assert(op::regex_search(std::string("hello   world"), m_space, re_space));
+	assert(m_space[0].str() == "   ");
+	std::cerr << "  [:space:] matched three spaces\n";
+	
+	// 7.5. Test [:upper:] POSIX class
+	std::cerr << "  7.5. POSIX [:upper:] class:\n";
+	sregex re_upper(std::string("[[:upper:]]+"), op::regex_constants::extended);
+	smatch m_upper;
+	assert(op::regex_search(std::string("abcDEFghi"), m_upper, re_upper));
+	assert(m_upper[0].str() == "DEF");
+	std::cerr << "  [:upper:] matched 'DEF'\n";
+	
+	// 7.6. Test [:lower:] POSIX class
+	std::cerr << "  7.6. POSIX [:lower:] class:\n";
+	sregex re_lower(std::string("[[:lower:]]+"), op::regex_constants::extended);
+	smatch m_lower;
+	assert(op::regex_search(std::string("ABCdefGHI"), m_lower, re_lower));
+	assert(m_lower[0].str() == "def");
+	std::cerr << "  [:lower:] matched 'def'\n";
+	
+	// 7.7. Test [:punct:] POSIX class
+	std::cerr << "  7.7. POSIX [:punct:] class:\n";
+	sregex re_punct(std::string("[[:punct:]]+"), op::regex_constants::extended);
+	smatch m_punct;
+	assert(op::regex_search(std::string("hello!@#world"), m_punct, re_punct));
+	// Match should contain punctuation characters
+	assert(m_punct[0].matched);
+	std::cerr << "  [:punct:] matched punctuation\n";
+	
+	// 7.8. Test [:xdigit:] POSIX class
+	std::cerr << "  7.8. POSIX [:xdigit:] class:\n";
+	sregex re_xdigit(std::string("[[:xdigit:]]+"), op::regex_constants::extended);
+	smatch m_xdigit;
+	assert(op::regex_search(std::string("xyz1A2FGzz"), m_xdigit, re_xdigit));
+	assert(m_xdigit[0].str() == "1A2F");
+	std::cerr << "  [:xdigit:] matched '1A2F'\n";
+
+	TEST_CASE_END("TestPOSIXClasses")
+}
+
 // =================================================================
 // Main Function
 // =================================================================
@@ -433,6 +508,7 @@ int main() {
 	TestSpecialReplacementPatterns();
 	TestEncodingAndError();
 	TestSyntaxSelection();
+	TestPOSIXClasses();
 
 	std::cerr << "\n========================================================\n";
 	std::cerr << "✨ All tests succeeded.\n";
