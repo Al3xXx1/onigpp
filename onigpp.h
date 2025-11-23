@@ -567,5 +567,6 @@ inline bool regex_search(
 } // namespace onigpp
 
 #ifdef ONIGPP_HEADER_ONLY
+	#define ONIGPP_HEADER_INLINE inline
 	#include "src/onigpp.cpp"
 #endif
