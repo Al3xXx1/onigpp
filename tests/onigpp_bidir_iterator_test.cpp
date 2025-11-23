@@ -268,7 +268,7 @@ int main() {
 	// --- Measures to avoid garbled characters on Windows consoles ---
 #ifdef _WIN32
 	// Switch to UTF-8 mode
-	//_setmode(_fileno(stdout), _O_U8TEXT);
+	//_setmode(_fileno(stdout), _O_U8TEXT); // Use std::cout instead of std::wcout
 	// Ensure console uses UTF-8 code page for interoperability
 	SetConsoleOutputCP(CP_UTF8);
 #else
