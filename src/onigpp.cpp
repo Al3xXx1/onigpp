@@ -3,6 +3,8 @@
 // License: MIT
 
 #include "../onigpp.h"
+#include <iterator>
+#include <memory>
 
 namespace onigpp {
 
@@ -886,5 +888,92 @@ void uninit() { onig_end(); }
 // onigpp::version
 
 const char* version() { return onig_version(); }
+
+// -------------------- Explicit template instantiations --------------------
+// Instantiates for: char, wchar_t, char16_t, char32_t
+// ---------------------------------------------------------------------------
+
+// Helper aliases to reduce verbosity
+using s_iter   = std::basic_string<char>::const_iterator;
+using ws_iter  = std::basic_string<wchar_t>::const_iterator;
+using u16_iter = std::basic_string<char16_t>::const_iterator;
+using u32_iter = std::basic_string<char32_t>::const_iterator;
+
+using s_sub_alloc   = std::allocator< sub_match<s_iter> >;
+using ws_sub_alloc  = std::allocator< sub_match<ws_iter> >;
+using u16_sub_alloc = std::allocator< sub_match<u16_iter> >;
+using u32_sub_alloc = std::allocator< sub_match<u32_iter> >;
+
+// basic_regex instantiations
+template class basic_regex<char, regex_traits<char>>;
+template class basic_regex<wchar_t, regex_traits<wchar_t>>;
+template class basic_regex<char16_t, regex_traits<char16_t>>;
+template class basic_regex<char32_t, regex_traits<char32_t>>;
+
+// regex_iterator instantiations
+template class regex_iterator<s_iter, char, regex_traits<char>>;
+template class regex_iterator<ws_iter, wchar_t, regex_traits<wchar_t>>;
+template class regex_iterator<u16_iter, char16_t, regex_traits<char16_t>>;
+template class regex_iterator<u32_iter, char32_t, regex_traits<char32_t>>;
+
+// regex_token_iterator instantiations
+template class regex_token_iterator<s_iter, char, regex_traits<char>>;
+template class regex_token_iterator<ws_iter, wchar_t, regex_traits<wchar_t>>;
+template class regex_token_iterator<u16_iter, char16_t, regex_traits<char16_t>>;
+template class regex_token_iterator<u32_iter, char32_t, regex_traits<char32_t>>;
+
+// match_results is a template alias-like type used in function templates;
+// we explicitly instantiate function templates with allocator types used above.
+
+// regex_search instantiations
+template bool regex_search<s_iter, s_sub_alloc, char, regex_traits<char>>(
+    s_iter, s_iter, match_results<s_iter, s_sub_alloc>&, const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
+
+template bool regex_search<ws_iter, ws_sub_alloc, wchar_t, regex_traits<wchar_t>>(
+    ws_iter, ws_iter, match_results<ws_iter, ws_sub_alloc>&, const basic_regex<wchar_t, regex_traits<wchar_t>>&, regex_constants::match_flag_type);
+
+template bool regex_search<u16_iter, u16_sub_alloc, char16_t, regex_traits<char16_t>>(
+    u16_iter, u16_iter, match_results<u16_iter, u16_sub_alloc>&, const basic_regex<char16_t, regex_traits<char16_t>>&, regex_constants::match_flag_type);
+
+template bool regex_search<u32_iter, u32_sub_alloc, char32_t, regex_traits<char32_t>>(
+    u32_iter, u32_iter, match_results<u32_iter, u32_sub_alloc>&, const basic_regex<char32_t, regex_traits<char32_t>>&, regex_constants::match_flag_type);
+
+// regex_match instantiations
+template bool regex_match<s_iter, s_sub_alloc, char, regex_traits<char>>(
+    s_iter, s_iter, match_results<s_iter, s_sub_alloc>&, const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
+
+template bool regex_match<ws_iter, ws_sub_alloc, wchar_t, regex_traits<wchar_t>>(
+    ws_iter, ws_iter, match_results<ws_iter, ws_sub_alloc>&, const basic_regex<wchar_t, regex_traits<wchar_t>>&, regex_constants::match_flag_type);
+
+template bool regex_match<u16_iter, u16_sub_alloc, char16_t, regex_traits<char16_t>>(
+    u16_iter, u16_iter, match_results<u16_iter, u16_sub_alloc>&, const basic_regex<char16_t, regex_traits<char16_t>>&, regex_constants::match_flag_type);
+
+template bool regex_match<u32_iter, u32_sub_alloc, char32_t, regex_traits<char32_t>>(
+    u32_iter, u32_iter, match_results<u32_iter, u32_sub_alloc>&, const basic_regex<char32_t, regex_traits<char32_t>>&, regex_constants::match_flag_type);
+
+// regex_replace instantiations (OutputIt = back_insert_iterator<std::basic_string<CharT>>)
+template std::back_insert_iterator<std::basic_string<char>> regex_replace<
+    std::back_insert_iterator<std::basic_string<char>>, s_iter, char, regex_traits<char>>(
+    std::back_insert_iterator<std::basic_string<char>>, s_iter, s_iter,
+    const basic_regex<char, regex_traits<char>>&,
+    const basic_string<char>&, regex_constants::match_flag_type);
+
+template std::back_insert_iterator<std::basic_string<wchar_t>> regex_replace<
+    std::back_insert_iterator<std::basic_string<wchar_t>>, ws_iter, wchar_t, regex_traits<wchar_t>>(
+    std::back_insert_iterator<std::basic_string<wchar_t>>, ws_iter, ws_iter,
+    const basic_regex<wchar_t, regex_traits<wchar_t>>&,
+    const basic_string<wchar_t>&, regex_constants::match_flag_type);
+
+template std::back_insert_iterator<std::basic_string<char16_t>> regex_replace<
+    std::back_insert_iterator<std::basic_string<char16_t>>, u16_iter, char16_t, regex_traits<char16_t>>(
+    std::back_insert_iterator<std::basic_string<char16_t>>, u16_iter, u16_iter,
+    const basic_regex<char16_t, regex_traits<char16_t>>&,
+    const basic_string<char16_t>&, regex_constants::match_flag_type);
+
+template std::back_insert_iterator<std::basic_string<char32_t>> regex_replace<
+    std::back_insert_iterator<std::basic_string<char32_t>>, u32_iter, char32_t, regex_traits<char32_t>>(
+    std::back_insert_iterator<std::basic_string<char32_t>>, u32_iter, u32_iter,
+    const basic_regex<char32_t, regex_traits<char32_t>>&,
+    const basic_string<char32_t>&, regex_constants::match_flag_type);
 
 } // namespace onigpp
