@@ -343,6 +343,14 @@ using u16regex = basic_regex<char16_t>;
 using u32regex = basic_regex<char32_t>;
 
 ////////////////////////////////////////////
+// Non-member swap for basic_regex
+
+template <class CharT, class Traits>
+void swap(basic_regex<CharT, Traits>& lhs, basic_regex<CharT, Traits>& rhs) noexcept {
+	lhs.swap(rhs);
+}
+
+////////////////////////////////////////////
 // onigpp::regex_iterator
 
 template <class BidirIt, class CharT = typename std::iterator_traits<BidirIt>::value_type, class Traits = regex_traits<CharT>>

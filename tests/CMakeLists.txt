@@ -45,3 +45,9 @@ add_executable(match_results_aliases_test match_results_aliases_test.cpp)
 target_compile_definitions(match_results_aliases_test PRIVATE "")
 target_include_directories(match_results_aliases_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(match_results_aliases_test PRIVATE onigpp)
+
+# swap_test.exe
+add_executable(swap_test swap_test.cpp)
+target_compile_definitions(swap_test PRIVATE "")
+target_include_directories(swap_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(swap_test PRIVATE onigpp)

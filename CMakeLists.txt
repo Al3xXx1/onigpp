@@ -106,5 +106,9 @@ add_test(
 	NAME test7
 	COMMAND $<TARGET_FILE:match_results_aliases_test>
 	WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
+add_test(
+	NAME test8
+	COMMAND $<TARGET_FILE:swap_test>
+	WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
 
 ##############################################################################
