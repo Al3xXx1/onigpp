@@ -1,5 +1,5 @@
 // onigpp_testw.cpp --- Wide-character (Unicode) tests for Oniguruma++ (onigpp)
-// Author: katаhiromz (adapted)
+// Author: katаromz (adapted)
 // License: MIT
 #include "onigpp.h"
 #include <iostream>
@@ -8,6 +8,7 @@
 #include <regex>
 #include <cassert>
 #include <locale>
+#include <algorithm> // 追加: std::count を使うため
 
 // --- Additional headers for Windows ---
 #ifdef _WIN32
@@ -231,6 +232,22 @@ void TestReplacement() {
 	std::wstring result3 = op::regex_replace(s3, re3, fmt3);
 	// Expected: -word-
 	assert(result3 == L"-word-");
+	// 追加チェック: '-' の数が正しいこと（先頭と末尾の2個）
+	size_t dash_count_w = std::count(result3.begin(), result3.end(), L'-');
+	assert(dash_count_w == 2);
+
+	// 4.3a Zero-width anchors: '^' and '$'
+	{
+		wregex re_start(L"^");
+		std::wstring res_start = op::regex_replace(s3, re_start, fmt3);
+		assert(res_start == L"-word");
+		assert(std::count(res_start.begin(), res_start.end(), L'-') == 1);
+
+		wregex re_end(L"$");
+		std::wstring res_end = op::regex_replace(s3, re_end, fmt3);
+		assert(res_end == L"word-");
+		assert(std::count(res_end.begin(), res_end.end(), L'-') == 1);
+	}
 
 	// 4.4 First-only replacement (format_first_only)
 	std::wstring s4 = L"1 2 3 4";

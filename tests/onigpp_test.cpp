@@ -8,6 +8,7 @@
 #include <regex>
 #include <cassert>
 #include <locale>
+#include <algorithm> // 追加: std::count を使うため
 
 // --- Additional headers for Windows ---
 #ifdef _WIN32
@@ -240,6 +241,22 @@ void TestReplacement() {
 	// Expected result: -word-
 	// If it forced the next character output after a zero-width match, it would be "-w-o-r-d-"
 	assert(result3 == "-word-");
+	// 追加チェック: '-' の数が正しいこと（先頭と末尾の2個）
+	size_t dash_count = std::count(result3.begin(), result3.end(), '-');
+	assert(dash_count == 2);
+
+	// 4.3a Zero-width anchors: '^' (start) and '$' (end)
+	{
+		sregex re_start("^");
+		std::string res_start = op::regex_replace(s3, re_start, fmt3);
+		assert(res_start == "-word");
+		assert(std::count(res_start.begin(), res_start.end(), '-') == 1);
+
+		sregex re_end("$");
+		std::string res_end = op::regex_replace(s3, re_end, fmt3);
+		assert(res_end == "word-");
+		assert(std::count(res_end.begin(), res_end.end(), '-') == 1);
+	}
 
 	// 4.4. First-only replacement (format_first_only)
 	std::string s4 = "1 2 3 4";
