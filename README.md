@@ -4,7 +4,7 @@
 
 This is a C++ wrapper of the Oniguruma regular expression engine.
 
-## Usage
+## Build
 
 ```bash
 git clone https://github.com/katahiromz/onigpp
@@ -17,7 +17,9 @@ cmake --build build
 
 ## Testing
 
-
+```bash
+cmake --build build -t test
+```
 
 ## Contact us
 
