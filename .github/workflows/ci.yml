@@ -33,7 +33,7 @@ jobs:
           fi
 
       - name: Configure (Ninja)
-        run: cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17
 
       - name: Build
         run: cmake --build build -j
@@ -56,7 +56,7 @@ jobs:
           submodules: recursive
 
       - name: Configure (MSVC x64)
-        run: cmake -S . -B build -A x64 -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17
 
       - name: Build (Release)
         run: cmake --build build --config Release -- /m
