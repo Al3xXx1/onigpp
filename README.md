@@ -8,10 +8,6 @@ This is a C++11 wrapper of the Oniguruma regular expression engine, with standar
 
 - [RE.md](RE.md) — Oniguruma Regular Expressions reference (English)
 
-## API reference
-
-- [API.md](API.md) — Oniguruma C API reference (English)
-
 ## Build
 
 ```bash
@@ -28,6 +24,18 @@ cmake --build build
 ```bash
 cmake --build build -t test
 ```
+
+## Header
+
+- [onigpp.h](onigpp.h)
+
+## License
+
+- BSD-2-Clause
+
+## API reference
+
+- [API.md](API.md) — Oniguruma C API reference (English)
 
 ## Contact us
 
