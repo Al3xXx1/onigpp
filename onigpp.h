@@ -548,7 +548,7 @@ inline basic_string<CharT> regex_replace(
 	const CharT* fmt,
 	regex_constants::match_flag_type flags = regex_constants::match_default)
 {
-	return regex_replace(basic_string<CharT>(s), e, fmt, flags);
+	return regex_replace(basic_string<CharT>(s), e, basic_string<CharT>(fmt), flags);
 }
 
 ////////////////////////////////////////////
