@@ -6,7 +6,11 @@ This is a C++ wrapper of the Oniguruma regular expression engine.
 
 ## Regular expression reference
 
-See [RE.md](RE.md) for the Oniguruma regular expression syntax and extensions.
+- [RE.md] — Oniguruma Regular Expressions reference (English)
+
+## API reference
+
+- [API.md] — Oniguruma C API reference (English)
 
 ## Build
 
