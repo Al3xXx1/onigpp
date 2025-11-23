@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cstring>
 #include <cassert>
+#include <locale>
 
 // Oniguruma
 #define ONIG_ESCAPE_UCHAR_COLLISION // Use UnigUChar instead of UChar
@@ -229,10 +230,10 @@ public:
 	using string_type = typename Traits::string_type;
 	using flag_type = regex_constants::syntax_option_type;
 	using self_type = basic_regex<CharT,Traits>;
-	using locale_type = int;
+	using locale_type = std::locale;
 
 public:
-	basic_regex() : m_regex(nullptr), m_encoding(nullptr), m_flags(regex_constants::normal) { }
+	basic_regex() : m_regex(nullptr), m_encoding(nullptr), m_flags(regex_constants::normal), m_locale(std::locale()) { }
 	explicit basic_regex(const CharT* s, flag_type f = regex_constants::normal, OnigEncoding enc = nullptr)
 		: basic_regex(s, Traits::length(s), f, enc) { }
 	basic_regex(const CharT* s, size_type count, flag_type f = regex_constants::normal, OnigEncoding enc = nullptr);
@@ -280,21 +281,24 @@ public:
 		std::swap(m_encoding, other.m_encoding);
 		std::swap(m_flags, other.m_flags);
 		std::swap(m_pattern, other.m_pattern);
+		std::swap(m_locale, other.m_locale);
 	}
 
 	template <class, class> friend struct regex_access;
 
-	locale_type getloc() { return 0; }
-	locale_type imbue(locale_type loc) { return loc; }
+	locale_type getloc() const { return m_locale; }
+	locale_type imbue(locale_type loc);
 
 protected:
 	OnigRegex m_regex;
 	OnigEncoding m_encoding;
 	flag_type m_flags;
 	string_type m_pattern;
+	locale_type m_locale;
 
 	static OnigOptionType _options_from_flags(flag_type f);
 	static OnigSyntaxType* _syntax_from_flags(flag_type f);
+	string_type _preprocess_pattern_for_locale(const string_type& pattern) const;
 };
 
 ////////////////////////////////////////////
