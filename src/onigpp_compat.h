@@ -1,7 +1,7 @@
 #pragma once
 
-// C++11 向け互換ヘッダ
-// std::make_unique が存在しない（C++ < 14）場合にのみ定義します。
+// C++11 compatibility header
+// Only defined when std::make_unique does not exist (C++ < 14)
 
 #include <memory>
 #include <type_traits>
