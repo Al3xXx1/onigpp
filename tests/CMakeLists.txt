@@ -39,3 +39,9 @@ add_executable(iterator_range_ctor_test iterator_range_ctor_test.cpp)
 target_compile_definitions(iterator_range_ctor_test PRIVATE "")
 target_include_directories(iterator_range_ctor_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(iterator_range_ctor_test PRIVATE onigpp)
+
+# match_results_aliases_test.exe
+add_executable(match_results_aliases_test match_results_aliases_test.cpp)
+target_compile_definitions(match_results_aliases_test PRIVATE "")
+target_include_directories(match_results_aliases_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(match_results_aliases_test PRIVATE onigpp)

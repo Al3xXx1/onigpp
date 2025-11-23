@@ -102,5 +102,9 @@ add_test(
 	NAME test6
 	COMMAND $<TARGET_FILE:iterator_range_ctor_test>
 	WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
+add_test(
+	NAME test7
+	COMMAND $<TARGET_FILE:match_results_aliases_test>
+	WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
 
 ##############################################################################
