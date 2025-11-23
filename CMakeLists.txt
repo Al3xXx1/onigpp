@@ -20,6 +20,18 @@ if(CMAKE_VERSION VERSION_LESS "3.1")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
+if (WIN32)
+	if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+		# using Clang
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
+	elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+		# using GCC
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -static")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
+	endif()
+endif()
+
 if (MSVC)
 	# replace "/MD" with "/MT" (building without runtime DLLs)
 	set(CompilerFlags

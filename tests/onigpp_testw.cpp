@@ -343,10 +343,10 @@ void TestEncodingAndError() {
 int main() {
 	// --- Measures to avoid garbled characters on Windows consoles ---
 #ifdef _WIN32
-	// Switch to UTF-8 mode
-	_setmode(_fileno(stdout), _O_U8TEXT);
-	_setmode(_fileno(stderr), _O_U8TEXT);
-	_setmode(_fileno(stdin), _O_U8TEXT);
+	// Switch to UTF-16 mode
+	_setmode(_fileno(stdout), _O_WTEXT);
+	_setmode(_fileno(stderr), _O_WTEXT);
+	_setmode(_fileno(stdin), _O_WTEXT);
 	// Ensure console uses UTF-8 code page for interoperability
 	SetConsoleOutputCP(CP_UTF8);
 #else
