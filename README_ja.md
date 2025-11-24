@@ -28,7 +28,7 @@ Oniguruma の正規表現エンジンを C++11 向けに `std::regex` ライク�
 
 ```cpp
 // 例: 実際のシグネチャは API.md を参照してください
-#include <onigpp.h>
+#include "onigpp.h"
 #include <iostream>
 #include <string>
 
@@ -84,8 +84,6 @@ CI では `USE_STD_FOR_TESTS=ON` と `OFF` の両方でテストが回ってい�
 
 - [RE.md](RE.md) — Oniguruma 正規表現リファレンス（英語）
 - [API.md](API.md) — Oniguruma C API リファレンス（英語）
-
-詳細なクラス・関数の利用方法は API.md を参照してください。
 
 ## Header
 
