@@ -31,11 +31,11 @@ Oniguruma の正規表現エンジンを C++11 向けに `std::regex` ライク�
 
 #ifdef USE_ONIGPP
     #include "onigpp.h"
-    namespace re = onigpp;
-    re::auto_init g_auto_init;
+    namespace rex = onigpp;
+    rex::auto_init g_auto_init;
 #else
     #include <regex>
-    namespace re = std;
+    namespace rex = std;
 #endif
 
 #include <iostream>
@@ -43,9 +43,9 @@ Oniguruma の正規表現エンジンを C++11 向けに `std::regex` ライク�
 
 int main() {
     std::string s = "hello 123 world";
-    re::regex r(R"(\d+)");
-    re::smatch m;
-    if (re::regex_search(s, m, r)) {
+    rex::regex r(R"(\d+)");
+    rex::smatch m;
+    if (rex::regex_search(s, m, r)) {
         std::cout << "matched: " << m.str() << std::endl;
     }
     return 0;
@@ -96,11 +96,11 @@ ECMAScript 互換の構文を使用するには、正規表現を作成する際
 
 ```cpp
 #include "onigpp.h"
-namespace re = onigpp;
-re::auto_init g_auto_init;
+namespace rex = onigpp;
+rex::auto_init g_auto_init;
 
 // ECMAScript モード（std::regex のデフォルトに類似）
-re::regex pattern(R"(\d+)", re::regex_constants::ECMAScript);
+rex::regex pattern(R"(\d+)", rex::regex_constants::ECMAScript);
 ```
 
 ### サポートされている機能
@@ -146,8 +146,8 @@ onigpp の ECMAScript モードでは以下をサポートしています：
 ```cpp
 #include <regex>
 std::string text = "価格: $100";
-std::regex re(R"(\$(\d+))");
-std::string result = std::regex_replace(text, re, "$$$1.00");
+std::regex rex(R"(\$(\d+))");
+std::string result = std::regex_replace(text, rex, "$$$1.00");
 // 結果: "価格: $100.00"
 ```
 
@@ -156,8 +156,8 @@ std::string result = std::regex_replace(text, re, "$$$1.00");
 #include "onigpp.h"
 onigpp::auto_init init;
 std::string text = "価格: $100";
-onigpp::regex re(R"(\$(\d+))", onigpp::regex_constants::ECMAScript);
-std::string result = onigpp::regex_replace(text, re, "$$$1.00");
+onigpp::regex rex(R"(\$(\d+))", onigpp::regex_constants::ECMAScript);
+std::string result = onigpp::regex_replace(text, rex, "$$$1.00");
 // 結果: "価格: $100.00"
 ```
 

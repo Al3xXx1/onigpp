@@ -31,11 +31,11 @@ This repository provides a wrapper to make Oniguruma easy to use from C++. It of
 
 #ifdef USE_ONIGPP
     #include "onigpp.h"
-    namespace re = onigpp;
-    re::auto_init g_auto_init;
+    namespace rex = onigpp;
+    rex::auto_init g_auto_init;
 #else
     #include <regex>
-    namespace re = std;
+    namespace rex = std;
 #endif
 
 #include <iostream>
@@ -43,9 +43,9 @@ This repository provides a wrapper to make Oniguruma easy to use from C++. It of
 
 int main() {
     std::string s = "hello 123 world";
-    re::regex r(R"(\d+)");
-    re::smatch m;
-    if (re::regex_search(s, m, r)) {
+    rex::regex r(R"(\d+)");
+    rex::smatch m;
+    if (rex::regex_search(s, m, r)) {
         std::cout << "matched: " << m.str() << std::endl;
     }
     return 0;
@@ -96,11 +96,11 @@ To use ECMAScript-compatible syntax, specify the `ECMAScript` flag when creating
 
 ```cpp
 #include "onigpp.h"
-namespace re = onigpp;
-re::auto_init g_auto_init;
+namespace rex = onigpp;
+rex::auto_init g_auto_init;
 
 // ECMAScript mode (similar to std::regex default)
-re::regex pattern(R"(\d+)", re::regex_constants::ECMAScript);
+rex::regex pattern(R"(\d+)", rex::regex_constants::ECMAScript);
 ```
 
 ### What's Supported
@@ -148,8 +148,8 @@ Some features may behave differently from `std::regex`:
 ```cpp
 #include <regex>
 std::string text = "Price: $100";
-std::regex re(R"(\$(\d+))");
-std::string result = std::regex_replace(text, re, "$$$1.00");
+std::regex rex(R"(\$(\d+))");
+std::string result = std::regex_replace(text, rex, "$$$1.00");
 // Result: "Price: $100.00"
 ```
 
@@ -158,8 +158,8 @@ std::string result = std::regex_replace(text, re, "$$$1.00");
 #include "onigpp.h"
 onigpp::auto_init init;
 std::string text = "Price: $100";
-onigpp::regex re(R"(\$(\d+))", onigpp::regex_constants::ECMAScript);
-std::string result = onigpp::regex_replace(text, re, "$$$1.00");
+onigpp::regex rex(R"(\$(\d+))", onigpp::regex_constants::ECMAScript);
+std::string result = onigpp::regex_replace(text, rex, "$$$1.00");
 // Result: "Price: $100.00"
 ```
 
@@ -172,11 +172,11 @@ With the multiline emulation, `^` and `$` match at line boundaries:
 onigpp::auto_init init;
 
 std::string text = "line1\nline2\nline3";
-onigpp::regex re("^line\\d", onigpp::regex_constants::ECMAScript | 
+onigpp::regex rex("^line\\d", onigpp::regex_constants::ECMAScript | 
                              onigpp::regex_constants::multiline);
 
 // Find all lines starting with "line" followed by a digit
-auto begin = onigpp::sregex_iterator(text.begin(), text.end(), re);
+auto begin = onigpp::sregex_iterator(text.begin(), text.end(), rex);
 auto end = onigpp::sregex_iterator();
 
 for (auto it = begin; it != end; ++it) {
