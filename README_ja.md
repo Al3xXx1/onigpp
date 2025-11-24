@@ -29,12 +29,18 @@ Oniguruma の正規表現エンジンを C++11 向けに `std::regex` ライク�
 簡易例:
 
 ```cpp
-#include "onigpp.h"
+#define USE_ONIGPP
+
+#ifdef USE_ONIGPP
+    #include "onigpp.h"
+    namespace re = onigpp;
+#else
+    #include <regex>
+    namespace re = std;
+#endif
+
 #include <iostream>
 #include <string>
-
-namespace re = onigpp;
-//namespace re = std; // 切り替え可能
 
 int main() {
     std::string s = "hello 123 world";
