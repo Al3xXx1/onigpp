@@ -11,7 +11,7 @@ void test_nosubs() {
 	
 	// Test 1: nosubs flag should prevent capturing submatches
 	{
-		std::string pattern = "(\\w+)\\s+(\\w+)";
+		std::string pattern = R"((\w+)\s+(\w+))";
 		regex re(pattern.c_str(), pattern.length(), regex_constants::nosubs);
 		std::string text = "hello world";
 		smatch m;
@@ -24,7 +24,7 @@ void test_nosubs() {
 	
 	// Test 2: Without nosubs, submatches should be captured
 	{
-		std::string pattern = "(\\w+)\\s+(\\w+)";
+		std::string pattern = R"((\w+)\s+(\w+))";
 		regex re(pattern.c_str(), pattern.length(), regex_constants::normal);
 		std::string text = "hello world";
 		smatch m;
@@ -41,7 +41,7 @@ void test_nosubs() {
 	
 	// Test 3: nosubs with regex_match
 	{
-		std::string pattern = "(\\d+)";
+		std::string pattern = R"((\d+))";
 		regex re(pattern.c_str(), pattern.length(), regex_constants::nosubs);
 		std::string text = "123";
 		smatch m;
@@ -54,7 +54,7 @@ void test_nosubs() {
 	
 	// Test 4: Without nosubs in regex_match
 	{
-		std::string pattern = "(\\d+)";
+		std::string pattern = R"((\d+))";
 		regex re(pattern.c_str(), pattern.length(), regex_constants::normal);
 		std::string text = "123";
 		smatch m;
@@ -107,7 +107,7 @@ void test_optimize() {
 	
 	// Test 1: optimize flag should not cause errors (it's a no-op)
 	{
-		std::string pattern = "\\d+";
+		std::string pattern = R"(\d+)";
 		regex re(pattern.c_str(), pattern.length(), regex_constants::optimize);
 		std::string text = "123";
 		smatch m;
@@ -125,7 +125,7 @@ void test_combined_flags() {
 	
 	// Test: nosubs + collate + optimize
 	{
-		std::string pattern = "(\\w+)";
+		std::string pattern = R"((\w+))";
 		regex re(pattern.c_str(), pattern.length(), 
 		         regex_constants::nosubs | regex_constants::collate | regex_constants::optimize);
 		std::string text = "hello";
