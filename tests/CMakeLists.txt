@@ -99,3 +99,6 @@ add_executable(ecmascript_multiline_test ecmascript_multiline_test.cpp)
 target_compile_definitions(ecmascript_multiline_test PRIVATE "")
 target_include_directories(ecmascript_multiline_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(ecmascript_multiline_test PRIVATE onigpp)
+
+# compat tests subdirectory
+add_subdirectory(compat)
