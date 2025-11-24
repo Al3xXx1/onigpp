@@ -142,5 +142,9 @@ add_test(
 	NAME test16
 	COMMAND $<TARGET_FILE:ecmascript_multiline_test>
 	WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
+add_test(
+	NAME compat_test
+	COMMAND $<TARGET_FILE:compat_test>
+	WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
 
 ##############################################################################
