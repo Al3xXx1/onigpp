@@ -694,9 +694,9 @@ basic_regex<CharT, Traits>::_preprocess_pattern_for_locale(const string_type& pa
 	// Limitations:
 	// - Only implemented for char and wchar_t (not char16_t/char32_t)
 	// - For char: enumerates all 256 values (0-255)
-	// - For wchar_t: enumerates BMP (U+0000-U+FFFF, ~65K characters)
-	// - Performance: Expansion happens once during pattern compilation; may be slow for wchar_t
-	//   with large character sets, but this is acceptable for typical use cases
+	// - For wchar_t: enumerates up to U+0800 (~2K characters) to avoid very large expansions
+	//   Covers Basic Latin, Latin-1 Supplement, Latin Extended A/B, and other common blocks
+	// - Performance: Expansion happens once during pattern compilation; fast for typical use cases
 	//
 	// Check if we're using a POSIX syntax that already supports these classes.
 	OnigSyntaxType* syntax = _syntax_from_flags(m_flags);
@@ -777,11 +777,11 @@ posix_class_expander<CharT,
 						
 						// Test characters in a reasonable range.
 						// For char: all 256 possible values (0-255)
-						// For wchar_t: enumerate BMP (Basic Multilingual Plane) U+0000 to U+FFFF
-						// Note: Full Unicode enumeration for wchar_t may be slow but provides
-						// complete locale-aware character classification for the BMP.
-						// Performance: ~65K iterations for wchar_t; acceptable for one-time pattern compilation.
-						const int max_char = (sizeof(CharT) == 1) ? 256 : 0x10000;
+						// For wchar_t: enumerate up to U+0800 (2048 characters) to avoid very large expansions
+						// This covers Basic Latin, Latin-1 Supplement, Latin Extended A/B, and other common
+						// character blocks sufficient for most locale-aware character classification.
+						// Performance: ~2K iterations for wchar_t; fast and practical for typical use cases.
+						const int max_char = (sizeof(CharT) == 1) ? 256 : 0x800;
 						
 						// Determine which class we're dealing with
 						std::ctype_base::mask mask = 0;
