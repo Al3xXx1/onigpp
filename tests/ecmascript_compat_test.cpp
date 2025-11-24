@@ -260,18 +260,20 @@ void TestReplacementTemplate() {
 	assert(result2 == "[hello] [world]");
 	
 	// Test $` (prefix) and $' (suffix)
+	// Note: regex_replace copies non-matching parts by default
 	std::string text3 = "abc123def";
 	std::string pattern3 = "\\d+";
 	sregex re3(pattern3, myns::regex_constants::ECMAScript);
 	std::string fmt3 = "($`)[$&]($')";
 	std::string result3 = myns::regex_replace(text3, re3, fmt3);
-	assert(result3 == "abc(abc)[123](def)def"); // Includes prefix "abc" and suffix "def"
+	// Result: "abc" (prefix copy) + "(abc)[123](def)" (replacement) + "def" (suffix copy)
+	assert(result3 == "abc(abc)[123](def)def");
 	
-	// Test $$ (literal $)
+	// Test $$ (literal $) followed by $& (whole match)
 	std::string text4 = "price: 100";
 	std::string pattern4 = "\\d+";
 	sregex re4(pattern4, myns::regex_constants::ECMAScript);
-	std::string fmt4 = "$$$&";  // $$$ = literal $ + $& = whole match
+	std::string fmt4 = "$$$&";  // First $$ = literal "$", then $& = whole match "100"
 	std::string result4 = myns::regex_replace(text4, re4, fmt4);
 	assert(result4 == "price: $100");
 	
