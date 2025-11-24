@@ -197,8 +197,8 @@ public:
 	using char_type = typename std::iterator_traits<BidirIt>::value_type;
 	using string_type = basic_string<char_type>;
 
-	// Sentinel value for "not found"
-	static constexpr size_type npos = std::numeric_limits<size_type>::max();
+	// Sentinel value for "not found" (matches std::match_results behavior)
+	static constexpr difference_type npos = -1;
 
 	match_results() : m_str_begin(), m_str_end() {}
 
