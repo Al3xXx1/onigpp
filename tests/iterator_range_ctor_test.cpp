@@ -7,6 +7,7 @@
 #include <list>
 #include <deque>
 #include <vector>
+#include <regex>
 #include <cassert>
 
 // --- Additional headers for Windows ---

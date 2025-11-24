@@ -6,16 +6,43 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <regex>
 #include <cassert>
 
-namespace op = onigpp;
+// --- Additional headers for Windows ---
+#ifdef _WIN32
+#include <windows.h>
+#include <io.h>
+#include <fcntl.h>
+#endif
+
+// Alias namespace for ease of use
+#ifdef USE_STD_FOR_TESTS
+	namespace op = std;
+#else
+	namespace op = onigpp;
+#endif
 
 // Test helper macro
 #define TEST_CASE(msg) std::cout << msg << std::endl
 
 int main() {
-	op::auto_init init_obj;
-	
+	// --- Measures to avoid garbled characters on Windows consoles ---
+#ifdef _WIN32
+	// Switch to UTF-8 mode
+	//_setmode(_fileno(stdout), _O_U8TEXT); // Use std::cout instead of std::wcout
+	// Ensure console uses UTF-8 code page for interoperability
+	SetConsoleOutputCP(CP_UTF8);
+#else
+	// For Linux/Mac, setting the locale is usually sufficient
+	std::setlocale(LC_ALL, "");
+#endif
+
+#ifndef USE_STD_FOR_TESTS
+	// Oniguruma initialization
+	op::auto_init init;
+#endif
+
 	TEST_CASE("Testing regex_token_iterator with std::initializer_list overloads");
 	
 	// Test 1: Using initializer_list for delimiter (-1)
