@@ -22,12 +22,8 @@ int main() {
 	assert(error_space == 8);
 	assert(error_badrepeat == 9);
 	assert(error_badbrace == 10);
-	assert(error_badpattern == 11);  // onigpp-specific, not in std::regex
-	assert(error_complexity == 12);
-	assert(error_stack == 13);
-	
-	// Test that error_type is the correct type (int)
-	static_assert(std::is_same<error_type, int>::value, "error_type should be int");
+	assert(error_complexity == 11);
+	assert(error_stack == 12);
 #else
 	// std::regex error constants (start from 0)
 	assert(error_collate == 0);
@@ -43,10 +39,10 @@ int main() {
 	assert(error_badrepeat == 10);
 	assert(error_complexity == 11);
 	assert(error_stack == 12);
-	
-	// std::regex_constants::error_type is an enum, not int
-	// Don't test the type for std::regex
 #endif
+	
+	// error_type is now an enum in both onigpp and std::regex (for compatibility)
+	static_assert(std::is_enum<error_type>::value, "error_type should be an enum");
 	
 	// Test that constants are constexpr (can be used in constant expressions)
 	constexpr error_type test_constexpr = error_collate;
