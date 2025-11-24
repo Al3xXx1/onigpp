@@ -26,10 +26,9 @@ Oniguruma の正規表現エンジンを C++11 向けに `std::regex` ライク�
 
 ## Quick start (usage)
 
-簡易例
+簡易例:
 
 ```cpp
-// 例: 実際のシグネチャは API.md を参照してください
 #include "onigpp.h"
 #include <iostream>
 #include <string>
