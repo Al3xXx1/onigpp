@@ -32,6 +32,7 @@ This repository provides a wrapper to make Oniguruma easy to use from C++. It of
 #ifdef USE_ONIGPP
     #include "onigpp.h"
     namespace re = onigpp;
+    re::auto_init g_auto_init;
 #else
     #include <regex>
     namespace re = std;

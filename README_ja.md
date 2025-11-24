@@ -32,6 +32,7 @@ Oniguruma の正規表現エンジンを C++11 向けに `std::regex` ライク�
 #ifdef USE_ONIGPP
     #include "onigpp.h"
     namespace re = onigpp;
+    re::auto_init g_auto_init;
 #else
     #include <regex>
     namespace re = std;
