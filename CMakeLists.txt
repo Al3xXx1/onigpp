@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.10)
 enable_testing()
 
 # project info
-project(onigpp VERSION 6.9.12
+project(onigpp VERSION 6.9.13
 	DESCRIPTION "Oniguruma++ (onigpp) regular expression library"
 	LANGUAGES C CXX)
 
