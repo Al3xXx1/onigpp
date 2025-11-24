@@ -176,8 +176,141 @@ class regex_traits {
 public:
 	using char_type = CharT;
 	using string_type = basic_string<CharT>;
+	using locale_type = std::locale;
+	using char_class_type = int;
+	
+	// Constructors
+	regex_traits() : m_locale() {}
+	explicit regex_traits(const locale_type& loc) : m_locale(loc) {}
+	
 	static size_type length(const char_type* s) {
 		return std::char_traits<char_type>::length(s);
+	}
+	
+	// Get current locale
+	locale_type getloc() const {
+		return m_locale;
+	}
+	
+	// Set locale and return the previous one
+	locale_type imbue(const locale_type& loc) {
+		locale_type old = m_locale;
+		m_locale = loc;
+		return old;
+	}
+	
+	// Transform a character sequence for collation
+	string_type transform(const char_type* first, const char_type* last) const {
+		// For char and wchar_t, use the locale's collate facet for proper collation
+		// For char16_t and char32_t, fall back to simple copy (portable default)
+		return transform_impl(first, last, typename std::is_same<char_type, char>::type());
+	}
+	
+	// Translate a character (identity transformation)
+	char_type translate(char_type c) const {
+		return c;
+	}
+	
+	// Check if character is of a specific character class
+	bool isctype(char_type c, char_class_type f) const {
+		// Use the locale's ctype facet for char and wchar_t
+		// For char16_t and char32_t, provide basic fallback
+		return isctype_impl(c, f, typename std::is_same<char_type, char>::type());
+	}
+	
+	// Convert character to numeric value
+	int value(char_type c, int base = 10) const {
+		// Handle common bases: 8, 10, 16
+		if (base < 2 || base > 36)
+			return -1;
+		
+		// Try digit 0-9
+		if (c >= static_cast<char_type>('0') && c <= static_cast<char_type>('9')) {
+			int val = static_cast<int>(c - static_cast<char_type>('0'));
+			return (val < base) ? val : -1;
+		}
+		
+		// Try lowercase a-z
+		if (c >= static_cast<char_type>('a') && c <= static_cast<char_type>('z')) {
+			int val = 10 + static_cast<int>(c - static_cast<char_type>('a'));
+			return (val < base) ? val : -1;
+		}
+		
+		// Try uppercase A-Z
+		if (c >= static_cast<char_type>('A') && c <= static_cast<char_type>('Z')) {
+			int val = 10 + static_cast<int>(c - static_cast<char_type>('A'));
+			return (val < base) ? val : -1;
+		}
+		
+		return -1;
+	}
+	
+	// Lookup collation name (returns empty string for simplicity)
+	string_type lookup_collatename(const char_type* first, const char_type* last) const {
+		// Standard collation names are locale-specific
+		// Return empty string as a safe, portable default
+		(void)first;
+		(void)last;
+		return string_type();
+	}
+
+private:
+	locale_type m_locale;
+	
+	// Transform implementation for char
+	string_type transform_impl(const char_type* first, const char_type* last, std::true_type) const {
+		// Use locale's collate facet for char
+		try {
+			const std::collate<char_type>& col = std::use_facet<std::collate<char_type>>(m_locale);
+			return col.transform(first, last);
+		} catch (...) {
+			// Fallback if facet not available
+			return string_type(first, last);
+		}
+	}
+	
+	// Transform implementation for wchar_t (same as char)
+	string_type transform_impl(const char_type* first, const char_type* last, std::false_type) const {
+		// Check if this is wchar_t
+		if (std::is_same<char_type, wchar_t>::value) {
+			try {
+				const std::collate<wchar_t>& col = std::use_facet<std::collate<wchar_t>>(m_locale);
+				return reinterpret_cast<const std::collate<char_type>&>(col).transform(first, last);
+			} catch (...) {
+				// Fallback if facet not available
+				return string_type(first, last);
+			}
+		}
+		// For char16_t and char32_t, use simple copy (portable default)
+		return string_type(first, last);
+	}
+	
+	// isctype implementation for char
+	bool isctype_impl(char_type c, char_class_type f, std::true_type) const {
+		// Use locale's ctype facet for char
+		try {
+			const std::ctype<char_type>& ct = std::use_facet<std::ctype<char_type>>(m_locale);
+			return ct.is(static_cast<std::ctype_base::mask>(f), c);
+		} catch (...) {
+			// Fallback: basic ASCII checks
+			return false;
+		}
+	}
+	
+	// isctype implementation for non-char types
+	bool isctype_impl(char_type c, char_class_type f, std::false_type) const {
+		// Check if this is wchar_t
+		if (std::is_same<char_type, wchar_t>::value) {
+			try {
+				const std::ctype<wchar_t>& ct = std::use_facet<std::ctype<wchar_t>>(m_locale);
+				return reinterpret_cast<const std::ctype<char_type>&>(ct).is(
+					static_cast<std::ctype_base::mask>(f), c);
+			} catch (...) {
+				return false;
+			}
+		}
+		// For char16_t and char32_t, provide basic fallback
+		return false;
 	}
 };
 
