@@ -94,12 +94,6 @@ CI では `USE_STD_FOR_TESTS=ON` と `OFF` の両方でテストが回ってい�
 
 - [onigpp.h](onigpp.h) — 主要ヘッダ
 
-## Platforms
-
-- Windows (Visual Studio 2015 以降)
-- Linux (Ubuntu 等)
-- macOS
-
 ## License
 
 - BSD-2-Clause（詳細は LICENSE ファイルを参照）

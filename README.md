@@ -4,13 +4,13 @@
 
 # Oniguruma++
 
-A C++11 wrapper around the Oniguruma regular expression engine that provides a std::regex-like interface. This library emphasizes ease of use and compatibility.
+A C++11 wrapper around the Oniguruma regular expression engine that provides a `std::regex`-like interface. This library emphasizes ease of use and compatibility.
 
 ![CI](https://github.com/katahiromz/onigpp/actions/workflows/ci.yml/badge.svg)
 
 ## What's this?
 
-This repository provides a wrapper to make Oniguruma easy to use from C++. It offers an API style similar to the standard library's <regex>, while exposing Oniguruma's powerful features.
+This repository provides a wrapper to make Oniguruma easy to use from C++. It offers an API style similar to the standard library's `<regex>`, while exposing Oniguruma's powerful features.
 
 ## Features
 
@@ -93,12 +93,6 @@ CI runs tests with both `USE_STD_FOR_TESTS=ON` and `OFF` to verify compatibility
 ## Header
 
 - [onigpp.h](onigpp.h) — main header
-
-## Platforms
-
-- Windows (Visual Studio 2015 and later)
-- Linux (Ubuntu, etc.)
-- macOS
 
 ## License
 
