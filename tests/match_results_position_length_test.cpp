@@ -3,6 +3,7 @@
 // License: MIT
 #include "onigpp.h"
 #include <iostream>
+#include <regex>
 #include <cassert>
 
 // --- Additional headers for Windows ---
