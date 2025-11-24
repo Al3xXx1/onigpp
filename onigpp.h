@@ -94,6 +94,12 @@ namespace regex_constants {
 	static constexpr match_flag_type format_no_copy = (1 << 9);
 	static constexpr match_flag_type format_literal = (1 << 10);
 
+	// Additional std::regex compatibility flags
+	// Note: Behavior implementation for these flags will be added in future PRs
+	static constexpr match_flag_type match_not_bow = (1 << 11); // std::regex_constants::match_not_bow
+	static constexpr match_flag_type match_not_eow = (1 << 12); // std::regex_constants::match_not_eow
+	static constexpr match_flag_type match_continuous = (1 << 13); // std::regex_constants::match_continuous
+
 	// Default values
 	// Note: In std::regex, ECMAScript is the default grammar when no flags are specified
 	static constexpr syntax_option_type normal = ECMAScript;

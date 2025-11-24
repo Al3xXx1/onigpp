@@ -81,3 +81,9 @@ add_executable(nosubs_collate_test nosubs_collate_test.cpp)
 target_compile_definitions(nosubs_collate_test PRIVATE "")
 target_include_directories(nosubs_collate_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(nosubs_collate_test PRIVATE onigpp)
+
+# match_flag_constants_test.exe
+add_executable(match_flag_constants_test match_flag_constants_test.cpp)
+target_compile_definitions(match_flag_constants_test PRIVATE "")
+target_include_directories(match_flag_constants_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(match_flag_constants_test PRIVATE onigpp)
