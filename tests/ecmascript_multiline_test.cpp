@@ -266,9 +266,7 @@ void TestComplexMultilinePattern() {
 	auto end = myns::sregex_iterator();
 	int count = std::distance(begin, end);
 	
-	// Should match "Name:", "Age:", "City:"
-	// Note: Age has digit, not uppercase letter after colon, so the original pattern wouldn't match it
-	// Using simpler pattern that just looks for "^[A-Z][a-z]+:"
+	// Should match "Name:", "Age:", "City:" at the start of each line
 	assert(count == 3);
 #endif
 	

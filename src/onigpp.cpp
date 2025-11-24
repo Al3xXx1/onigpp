@@ -1040,24 +1040,25 @@ basic_regex<CharT, Traits>::_emulate_ecmascript_multiline(const string_type& pat
 	bool in_char_class = false;
 	int bracket_depth = 0; // Track nesting level for character classes
 	
+	// Replacement strings as constants for maintainability
+	// In ECMAScript multiline: ^ matches at start OR after line terminators
+	// Line terminators: LF (\n), CR (\r), CRLF (\r\n), U+2028 (line separator), U+2029 (paragraph separator)
+	// Note: (?<=\r\n) is a fixed-length lookbehind (2 bytes) and is supported by Oniguruma
+	static constexpr const char* CARET_REPLACEMENT = "(?:\\A|(?:(?<=\\n)|(?<=\\r\\n)|(?<=\\r)|(?<=\\u2028)|(?<=\\u2029)))";
+	
+	// In ECMAScript multiline: $ matches at end OR before line terminators
+	static constexpr const char* DOLLAR_REPLACEMENT = "(?:\\z|(?=(?:\\r\\n|\\r|\\n|\\u2028|\\u2029)))";
+	
 	// Helper to append the replacement for ^ (start of line)
 	auto append_caret_replacement = [&result]() {
-		// In ECMAScript multiline: ^ matches at start OR after line terminators
-		// Line terminators: LF (\n), CR (\r), CRLF (\r\n), U+2028 (line separator), U+2029 (paragraph separator)
-		// Use alternation with lookbehind for line terminators
-		// Note: (?<=\r\n) is a fixed-length lookbehind (2 bytes) and is supported by Oniguruma
-		const char* replacement = "(?:\\A|(?:(?<=\\n)|(?<=\\r\\n)|(?<=\\r)|(?<=\\u2028)|(?<=\\u2029)))";
-		for (const char* p = replacement; *p; ++p) {
+		for (const char* p = CARET_REPLACEMENT; *p; ++p) {
 			result += CharT(*p);
 		}
 	};
 	
 	// Helper to append the replacement for $ (end of line)
 	auto append_dollar_replacement = [&result]() {
-		// In ECMAScript multiline: $ matches at end OR before line terminators
-		// Use alternation with lookahead for line terminators
-		const char* replacement = "(?:\\z|(?=(?:\\r\\n|\\r|\\n|\\u2028|\\u2029)))";
-		for (const char* p = replacement; *p; ++p) {
+		for (const char* p = DOLLAR_REPLACEMENT; *p; ++p) {
 			result += CharT(*p);
 		}
 	};
