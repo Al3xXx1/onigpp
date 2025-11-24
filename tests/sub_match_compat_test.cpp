@@ -93,12 +93,12 @@ void TestDefaultIsMatched() {
 	const char* start = str;
 	const char* end = str + 4;
 	
-	// Without specifying is_matched, it should default to true
+	// Test with matched flag set to true
 	myns::csub_match csm;
 	csm.first = start;
 	csm.second = end;
-	csm.matched = true;  // Set to true
-	assert(csm.matched == true);  // Should be true
+	csm.matched = true;
+	assert(csm.matched == true);
 	assert(csm.str() == "test");
 	
 	// Explicitly set to false
