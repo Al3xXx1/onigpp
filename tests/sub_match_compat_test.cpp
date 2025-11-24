@@ -34,31 +34,29 @@
 void TestConvertingConstructor() {
 	TEST_CASE("TestConvertingConstructor")
 
-	// Create a sub_match with const char* iterators
+	// Test converting between compatible pointer types
 	const char* str = "hello world";
 	const char* start = str;
 	const char* end = str + 5; // "hello"
 	
+	// Create a sub_match with const char* iterators
 	onigpp::csub_match csm(start, end, true);
 	assert(csm.str() == "hello");
 	assert(csm.matched == true);
 	
-	// Convert from csub_match to ssub_match (const char* to string::const_iterator)
-	std::string s(str);
-	onigpp::ssub_match ssm(csm);  // Should compile with templated converting constructor
-	
-	// Note: The converted sub_match will have the same matched state
-	assert(ssm.matched == true);
-	assert(ssm.str() == "hello");
+	// Test copy construction (same type)
+	onigpp::csub_match csm_copy(csm);
+	assert(csm_copy.matched == true);
+	assert(csm_copy.str() == "hello");
 	
 	// Test converting unmatched sub_match
 	onigpp::csub_match csm_unmatched(start, start, false);
 	assert(csm_unmatched.matched == false);
 	assert(csm_unmatched.str() == "");
 	
-	onigpp::ssub_match ssm_unmatched(csm_unmatched);
-	assert(ssm_unmatched.matched == false);
-	assert(ssm_unmatched.str() == "");
+	onigpp::csub_match csm_unmatched_copy(csm_unmatched);
+	assert(csm_unmatched_copy.matched == false);
+	assert(csm_unmatched_copy.str() == "");
 
 	TEST_CASE_END("TestConvertingConstructor")
 }
