@@ -77,6 +77,9 @@ target_link_libraries(onigpp PUBLIC onig)
 # tests
 add_subdirectory(tests)
 
+# tools
+add_subdirectory(tools)
+
 # CTest tests
 add_test(
 	NAME test1
