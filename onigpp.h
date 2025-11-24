@@ -589,6 +589,7 @@ protected:
 	static OnigSyntaxType* _syntax_from_flags(flag_type f);
 	string_type _preprocess_pattern_for_locale(const string_type& pattern) const;
 	string_type _preprocess_pattern_for_ecmascript(const string_type& pattern) const;
+	string_type _emulate_ecmascript_multiline(const string_type& pattern) const;
 };
 
 ////////////////////////////////////////////
