@@ -128,9 +128,11 @@ The ECMAScript mode in onigpp provides:
 Some features may behave differently from `std::regex`:
 
 1. **Multiline Mode**: 
-   - The `multiline` flag is available but may not perfectly match ECMAScript semantics for `^` and `$` anchors
-   - In ECMAScript, multiline affects whether `^` and `$` match at line boundaries
-   - Oniguruma's MULTILINE option affects both dot and anchors together
+   - ✨ **NEW**: The `multiline` flag now emulates ECMAScript semantics when combined with `ECMAScript` mode
+   - When both `ECMAScript` and `multiline` flags are set, onigpp rewrites the pattern at compile time to make `^` and `$` match at line boundaries (after/before `\n`, `\r`, `\r\n`, U+2028, U+2029) without affecting dot behavior
+   - This emulation preserves ECMAScript semantics: dot (`.`) still does NOT match newlines (controlled separately by a potential future dotall flag)
+   - **Performance note**: Pattern rewriting adds a small CPU cost at regex construction time, but has no runtime matching overhead
+   - **Limitations**: The rewrite handles common cases (unescaped `^` and `$` outside character classes). Complex or unusual patterns may have edge cases; please report issues if you find any
 
 2. **Named Captures**:
    - Oniguruma uses `(?<name>...)` syntax
@@ -160,6 +162,33 @@ onigpp::regex re(R"(\$(\d+))", onigpp::regex_constants::ECMAScript);
 std::string result = onigpp::regex_replace(text, re, "$$$1.00");
 // Result: "Price: $100.00"
 ```
+
+### ECMAScript Multiline Example
+
+With the multiline emulation, `^` and `$` match at line boundaries:
+
+```cpp
+#include "onigpp.h"
+onigpp::auto_init init;
+
+std::string text = "line1\nline2\nline3";
+onigpp::regex re("^line\\d", onigpp::regex_constants::ECMAScript | 
+                             onigpp::regex_constants::multiline);
+
+// Find all lines starting with "line" followed by a digit
+auto begin = onigpp::sregex_iterator(text.begin(), text.end(), re);
+auto end = onigpp::sregex_iterator();
+
+for (auto it = begin; it != end; ++it) {
+    std::cout << "Match: " << it->str() << "\n";
+}
+// Output:
+// Match: line1
+// Match: line2
+// Match: line3
+```
+
+Note: Even with multiline mode, the dot (`.`) still does NOT match newlines, preserving ECMAScript semantics.
 
 ### Testing Your Migration
 

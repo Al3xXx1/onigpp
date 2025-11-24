@@ -525,13 +525,13 @@ OnigOptionType basic_regex<CharT, Traits>::_options_from_flags(flag_type f) {
 	if (ecmascript) {
 		// In ECMAScript:
 		// - By default, dot does NOT match newline (use SINGLELINE option)
-		// - In true ECMAScript, multiline flag affects ^/$ to match line boundaries
-		//   but Oniguruma's MULTILINE option affects both dot AND anchors, so we can't
-		//   implement true ECMAScript multiline semantics without pattern transformation
-		// - For now, we ensure dot never matches newline in ECMAScript mode
+		// - When multiline flag is set, we use pattern transformation to emulate
+		//   ECMAScript semantics (^ and $ match at line boundaries) without enabling
+		//   Oniguruma's MULTILINE option (which would also change dot behavior)
+		// - Pattern transformation is handled in _emulate_ecmascript_multiline()
 		options |= ONIG_OPTION_SINGLELINE; // dot doesn't match newline
-		// Note: multiline flag is currently not fully supported for anchors in ECMAScript mode
-		// as Oniguruma doesn't allow independent control of dot and anchor behavior
+		// Note: multiline anchor behavior is implemented via pattern rewriting,
+		// so we do NOT set ONIG_OPTION_MULTILINE here
 	} else {
 		// Non-ECMAScript modes: use original behavior
 		options |= (multiline ? (ONIG_OPTION_MULTILINE | ONIG_OPTION_NEGATE_SINGLELINE) : ONIG_OPTION_SINGLELINE);
@@ -908,14 +908,21 @@ template <class CharT, class Traits>
 typename basic_regex<CharT, Traits>::string_type 
 basic_regex<CharT, Traits>::_preprocess_pattern_for_ecmascript(const string_type& pattern) const {
 	// ECMAScript pattern preprocessing for compatibility with std::regex ECMAScript mode
-	// Handles: \xHH, \uHHHH, \0, and named capture normalization
+	// Handles: \xHH, \uHHHH, \0, named capture normalization, and multiline emulation
 	
 	typedef typename string_type::size_type size_type;
+	
+	// First, apply multiline emulation if the multiline flag is set
+	string_type working_pattern = pattern;
+	if (m_flags & regex_constants::multiline) {
+		working_pattern = _emulate_ecmascript_multiline(working_pattern);
+	}
+	
 	string_type result;
-	result.reserve(pattern.size());
+	result.reserve(working_pattern.size());
 	
 	size_type i = 0;
-	const size_type len = pattern.size();
+	const size_type len = working_pattern.size();
 	
 	// Helper to check if a character is a hex digit
 	auto is_hex_digit = [](CharT ch) -> bool {
@@ -938,13 +945,13 @@ basic_regex<CharT, Traits>::_preprocess_pattern_for_ecmascript(const string_type
 	};
 	
 	while (i < len) {
-		if (pattern[i] == CharT('\\') && i + 1 < len) {
-			CharT next = pattern[i + 1];
+		if (working_pattern[i] == CharT('\\') && i + 1 < len) {
+			CharT next = working_pattern[i + 1];
 			
 			// Handle \xHH - two hex digit escape
 			if (next == CharT('x') && i + 3 < len &&
-			    is_hex_digit(pattern[i + 2]) && is_hex_digit(pattern[i + 3])) {
-				int val = hex_value(pattern[i + 2]) * 16 + hex_value(pattern[i + 3]);
+			    is_hex_digit(working_pattern[i + 2]) && is_hex_digit(working_pattern[i + 3])) {
+				int val = hex_value(working_pattern[i + 2]) * 16 + hex_value(working_pattern[i + 3]);
 				result += static_cast<CharT>(val);
 				i += 4;
 				continue;
@@ -952,12 +959,12 @@ basic_regex<CharT, Traits>::_preprocess_pattern_for_ecmascript(const string_type
 			
 			// Handle \uHHHH - four hex digit Unicode escape
 			if (next == CharT('u') && i + 5 < len &&
-			    is_hex_digit(pattern[i + 2]) && is_hex_digit(pattern[i + 3]) &&
-			    is_hex_digit(pattern[i + 4]) && is_hex_digit(pattern[i + 5])) {
-				int val = hex_value(pattern[i + 2]) * 4096 +
-				         hex_value(pattern[i + 3]) * 256 +
-				         hex_value(pattern[i + 4]) * 16 +
-				         hex_value(pattern[i + 5]);
+			    is_hex_digit(working_pattern[i + 2]) && is_hex_digit(working_pattern[i + 3]) &&
+			    is_hex_digit(working_pattern[i + 4]) && is_hex_digit(working_pattern[i + 5])) {
+				int val = hex_value(working_pattern[i + 2]) * 4096 +
+				         hex_value(working_pattern[i + 3]) * 256 +
+				         hex_value(working_pattern[i + 4]) * 16 +
+				         hex_value(working_pattern[i + 5]);
 				
 				// Convert Unicode code point to CharT
 				// Note: \uHHHH can only represent U+0000 to U+FFFF (BMP)
@@ -987,19 +994,124 @@ basic_regex<CharT, Traits>::_preprocess_pattern_for_ecmascript(const string_type
 			}
 			
 			// Handle \0 - null escape (only when NOT followed by octal digit)
-			if (next == CharT('0') && (i + 2 >= len || !is_octal_digit(pattern[i + 2]))) {
+			if (next == CharT('0') && (i + 2 >= len || !is_octal_digit(working_pattern[i + 2]))) {
 				result += CharT('\0');
 				i += 2;
 				continue;
 			}
 			
 			// For all other escapes, keep them as-is
-			result += pattern[i++];
-			result += pattern[i++];
+			result += working_pattern[i++];
+			result += working_pattern[i++];
 		} else {
 			// Regular character
-			result += pattern[i++];
+			result += working_pattern[i++];
 		}
+	}
+	
+	return result;
+}
+
+template <class CharT, class Traits>
+typename basic_regex<CharT, Traits>::string_type 
+basic_regex<CharT, Traits>::_emulate_ecmascript_multiline(const string_type& pattern) const {
+	// ECMAScript multiline emulation: Rewrite ^ and $ anchors to match at line boundaries
+	// without enabling Oniguruma's MULTILINE option (which also changes dot behavior).
+	//
+	// In ECMAScript, the multiline flag affects only ^ and $ anchors:
+	// - ^ matches at start of string OR after any line terminator
+	// - $ matches at end of string OR before any line terminator
+	// - Dot (.) behavior is NOT affected by multiline (controlled separately by dotall/s)
+	//
+	// This function rewrites:
+	// - ^ to: (?:\A|(?:(?<=\n)|(?<=\r\n)|(?<=\r)|(?<=\u2028)|(?<=\u2029)))
+	// - $ to: (?:\z|(?=(?:\r\n|\r|\n|\u2028|\u2029)))
+	//
+	// Note: The rewrite must only affect unescaped ^ and $ that are outside character classes.
+	// Performance: Pattern rewriting adds CPU cost at regex compile time.
+	// Limitations: Complex patterns with nested groups or unusual contexts may have edge cases.
+	
+	typedef typename string_type::size_type size_type;
+	string_type result;
+	result.reserve(pattern.size() * 2); // Reserve extra space for expansions
+	
+	size_type i = 0;
+	const size_type len = pattern.size();
+	bool in_char_class = false;
+	int bracket_depth = 0; // Track nesting level for character classes
+	
+	// Helper to append the replacement for ^ (start of line)
+	auto append_caret_replacement = [&result]() {
+		// In ECMAScript multiline: ^ matches at start OR after line terminators
+		// Line terminators: LF (\n), CR (\r), CRLF (\r\n), U+2028 (line separator), U+2029 (paragraph separator)
+		// Use alternation with lookbehind for line terminators
+		// Note: (?<=\r\n) is a fixed-length lookbehind (2 bytes) and is supported by Oniguruma
+		const char* replacement = "(?:\\A|(?:(?<=\\n)|(?<=\\r\\n)|(?<=\\r)|(?<=\\u2028)|(?<=\\u2029)))";
+		for (const char* p = replacement; *p; ++p) {
+			result += CharT(*p);
+		}
+	};
+	
+	// Helper to append the replacement for $ (end of line)
+	auto append_dollar_replacement = [&result]() {
+		// In ECMAScript multiline: $ matches at end OR before line terminators
+		// Use alternation with lookahead for line terminators
+		const char* replacement = "(?:\\z|(?=(?:\\r\\n|\\r|\\n|\\u2028|\\u2029)))";
+		for (const char* p = replacement; *p; ++p) {
+			result += CharT(*p);
+		}
+	};
+	
+	while (i < len) {
+		CharT ch = pattern[i];
+		
+		// Handle escape sequences
+		if (ch == CharT('\\') && i + 1 < len) {
+			// Copy escape sequence as-is (two characters)
+			result += pattern[i++];
+			result += pattern[i++];
+			continue;
+		}
+		
+		// Track character class boundaries
+		if (ch == CharT('[') && !in_char_class) {
+			in_char_class = true;
+			bracket_depth = 1;
+			result += pattern[i++];
+			continue;
+		}
+		
+		if (in_char_class) {
+			if (ch == CharT('[')) {
+				// Nested bracket (e.g., for POSIX classes like [[:digit:]])
+				bracket_depth++;
+			} else if (ch == CharT(']')) {
+				bracket_depth--;
+				if (bracket_depth == 0) {
+					in_char_class = false;
+				}
+			}
+			result += pattern[i++];
+			continue;
+		}
+		
+		// Not in character class and not escaped: check for ^ and $
+		if (ch == CharT('^')) {
+			// Replace unescaped ^ outside character classes
+			append_caret_replacement();
+			i++;
+			continue;
+		}
+		
+		if (ch == CharT('$')) {
+			// Replace unescaped $ outside character classes
+			append_dollar_replacement();
+			i++;
+			continue;
+		}
+		
+		// Regular character
+		result += pattern[i++];
 	}
 	
 	return result;
