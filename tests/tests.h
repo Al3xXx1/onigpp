@@ -31,7 +31,6 @@
 	#define ONIGPP_TEST_INIT myns::auto_init onigpp_test_init
 #endif
 
-// --- Additional headers for Windows ---
 #ifdef _WIN32
 	#include <windows.h>
 	#include <io.h>

@@ -10,6 +10,24 @@
 #include <vector>
 #include <cassert>
 
+#ifdef _WIN32
+	#include <windows.h>
+	#include <io.h>
+	#include <fcntl.h>
+
+	inline void TESTS_OUTPUT_INIT(bool use_wcout = false) {
+		if (use_wcout)
+			_setmode(_fileno(stdout), _O_U8TEXT); // Use std::cout instead of std::wcout
+		// Ensure console uses UTF-8 code page for interoperability
+		SetConsoleOutputCP(CP_UTF8);
+	}
+#else
+	// For Linux/Mac, setting the locale is usually sufficient
+	inline void TESTS_OUTPUT_INIT(bool use_wcout = false) {
+		std::setlocale(LC_ALL, "");
+	}
+#endif
+
 // Simple JSON parser for our specific format
 // This is a minimal parser that handles our patterns.json structure
 class SimpleJSONParser {
@@ -387,6 +405,8 @@ private:
 };
 
 int main(int argc, char* argv[]) {
+	TESTS_OUTPUT_INIT();
+
     // Initialize oniguruma
     onigpp::auto_init onig_init;
 
