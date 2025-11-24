@@ -195,6 +195,8 @@ public:
 
         MatchResult stdResult, onigppResult;
         bool stdSuccess = false, onigppSuccess = false;
+        bool stdRegexNotSupported = false;
+        std::string stdExceptionMsg;
 
         // Run std::regex test
         try {
@@ -210,7 +212,11 @@ public:
                 stdResult = runStdReplace(stdRe, tc.input, tc.replace_template);
                 stdSuccess = true;
             }
+        } catch (const std::regex_error& e) {
+            stdExceptionMsg = e.what();
+            stdRegexNotSupported = true;
         } catch (const std::exception& e) {
+            // Generic exception from std::regex (not a regex_error)
             std::cout << "std::regex exception: " << e.what() << std::endl;
         }
 
@@ -236,8 +242,19 @@ public:
         // Compare results
         if (!stdSuccess || !onigppSuccess) {
             if (stdSuccess != onigppSuccess) {
-                std::cout << "❌ FAIL: One implementation threw exception" << std::endl;
-                failed++;
+                // One implementation threw exception
+                if (stdRegexNotSupported && onigppSuccess) {
+                    // std::regex doesn't support the feature, but onigpp does - this is expected
+                    if (!stdExceptionMsg.empty()) {
+                        std::cout << "⚠️  SKIP: std::regex does not support this pattern (" << stdExceptionMsg << ")" << std::endl;
+                    } else {
+                        std::cout << "⚠️  SKIP: std::regex does not support this pattern" << std::endl;
+                    }
+                } else {
+                    // Unexpected exception mismatch
+                    std::cout << "❌ FAIL: One implementation threw exception" << std::endl;
+                    failed++;
+                }
             } else {
                 std::cout << "⚠️  SKIP: Both implementations threw exceptions" << std::endl;
             }
