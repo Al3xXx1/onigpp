@@ -9,6 +9,8 @@
 - `oniguruma/` - サブモジュール
 - `src/` - ソース
 - `tests/` - テスト群
+- `tests/compat/` - `compat_test.cpp`がある場所
+- `tests/compat/patterns.json` - `compat_test`でテストするパターン項目を書いたJSON
 - `onigpp.h` - 主要ヘッダ。
 
 ## 指示
