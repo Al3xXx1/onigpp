@@ -239,7 +239,7 @@ int main() {
 	TEST_CASE_END("char16_t and char32_t traits")
 #else
 	std::cout << "\n--- char16_t and char32_t traits ---\n";
-	std::cout << "⚠️  Skipped (std::ctype<char16_t> and std::ctype<char32_t> not available in libc++)\n";
+	std::cout << "SKIPPED: std::ctype<char16_t> and std::ctype<char32_t> not available in libc++\n";
 #endif
 
 	// Test 10: length (existing method)
