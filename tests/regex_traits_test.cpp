@@ -5,7 +5,22 @@
 #include <iostream>
 #include <string>
 #include <locale>
+#include <regex>
 #include <cassert>
+
+// --- Additional headers for Windows ---
+#ifdef _WIN32
+#include <windows.h>
+#include <io.h>
+#include <fcntl.h>
+#endif
+
+// Alias namespace for ease of use
+#ifdef USE_STD_FOR_TESTS
+	namespace op = std;
+#else
+	namespace op = onigpp;
+#endif
 
 // Helper macros for test cases
 #define TEST_CASE(name) \
@@ -23,18 +38,34 @@
 	}
 
 int main() {
+	// --- Measures to avoid garbled characters on Windows consoles ---
+#ifdef _WIN32
+	// Switch to UTF-8 mode
+	//_setmode(_fileno(stdout), _O_U8TEXT); // Use std::cout instead of std::wcout
+	// Ensure console uses UTF-8 code page for interoperability
+	SetConsoleOutputCP(CP_UTF8);
+#else
+	// For Linux/Mac, setting the locale is usually sufficient
+	std::setlocale(LC_ALL, "");
+#endif
+
+#ifndef USE_STD_FOR_TESTS
+	// Oniguruma initialization
+	op::auto_init init;
+#endif
+
 	std::cout << "=== regex_traits Tests ===\n";
 
 	// Test 1: Typedefs and basic construction
 	TEST_CASE("Typedefs and Constructors")
-		onigpp::regex_traits<char> traits1;
-		onigpp::regex_traits<char> traits2{std::locale()};
-		onigpp::regex_traits<wchar_t> wtraits1;
-		onigpp::regex_traits<wchar_t> wtraits2{std::locale()};
+		op::regex_traits<char> traits1;
+		op::regex_traits<char> traits2{std::locale()};
+		op::regex_traits<wchar_t> wtraits1;
+		op::regex_traits<wchar_t> wtraits2{std::locale()};
 		
 		// Check that locale_type and char_class_type exist
-		onigpp::regex_traits<char>::locale_type loc;
-		onigpp::regex_traits<char>::char_class_type cct = 0;
+		op::regex_traits<char>::locale_type loc;
+		op::regex_traits<char>::char_class_type cct = 0;
 		(void)loc;
 		(void)cct;
 		
@@ -43,7 +74,7 @@ int main() {
 
 	// Test 2: getloc and imbue
 	TEST_CASE("getloc and imbue")
-		onigpp::regex_traits<char> traits;
+		op::regex_traits<char> traits;
 		std::locale default_loc = traits.getloc();
 		
 		std::locale new_loc = std::locale::classic();
@@ -55,7 +86,7 @@ int main() {
 
 	// Test 3: translate
 	TEST_CASE("translate")
-		onigpp::regex_traits<char> traits;
+		op::regex_traits<char> traits;
 		
 		// translate should return the character as-is
 		assert(traits.translate('A') == 'A');
@@ -68,7 +99,7 @@ int main() {
 
 	// Test 4: transform
 	TEST_CASE("transform")
-		onigpp::regex_traits<char> traits;
+		op::regex_traits<char> traits;
 		
 		std::string s1 = "test";
 		std::string result = traits.transform(s1.data(), s1.data() + s1.size());
@@ -80,7 +111,7 @@ int main() {
 
 	// Test 5: value with different bases
 	TEST_CASE("value")
-		onigpp::regex_traits<char> traits;
+		op::regex_traits<char> traits;
 		
 		// Base 10 (default)
 		assert(traits.value('0', 10) == 0);
@@ -118,13 +149,13 @@ int main() {
 
 	// Test 6: isctype
 	TEST_CASE("isctype")
-		onigpp::regex_traits<char> traits;
+		op::regex_traits<char> traits;
 		
 		// Test with some common character class types
 		// Note: The exact behavior depends on locale and char_class_type values
-		onigpp::regex_traits<char>::char_class_type digit_class = std::ctype_base::digit;
-		onigpp::regex_traits<char>::char_class_type alpha_class = std::ctype_base::alpha;
-		onigpp::regex_traits<char>::char_class_type space_class = std::ctype_base::space;
+		op::regex_traits<char>::char_class_type digit_class = std::ctype_base::digit;
+		op::regex_traits<char>::char_class_type alpha_class = std::ctype_base::alpha;
+		op::regex_traits<char>::char_class_type space_class = std::ctype_base::space;
 		
 		// These should work with standard locale
 		bool is_digit = traits.isctype('5', digit_class);
@@ -142,7 +173,7 @@ int main() {
 
 	// Test 7: lookup_collatename
 	TEST_CASE("lookup_collatename")
-		onigpp::regex_traits<char> traits;
+		op::regex_traits<char> traits;
 		
 		std::string name = "a";
 		std::string result = traits.lookup_collatename(name.data(), name.data() + name.size());
@@ -154,7 +185,7 @@ int main() {
 
 	// Test 8: wchar_t traits
 	TEST_CASE("wchar_t traits")
-		onigpp::regex_traits<wchar_t> wtraits;
+		op::regex_traits<wchar_t> wtraits;
 		
 		// Test translate
 		assert(wtraits.translate(L'A') == L'A');
@@ -172,8 +203,8 @@ int main() {
 
 	// Test 9: char16_t and char32_t traits (basic functionality)
 	TEST_CASE("char16_t and char32_t traits")
-		onigpp::regex_traits<char16_t> u16traits;
-		onigpp::regex_traits<char32_t> u32traits;
+		op::regex_traits<char16_t> u16traits;
+		op::regex_traits<char32_t> u32traits;
 		
 		// Test translate
 		assert(u16traits.translate(u'A') == u'A');
@@ -199,10 +230,10 @@ int main() {
 	TEST_CASE("length")
 		// Ensure existing length method still works
 		const char* str = "hello";
-		assert(onigpp::regex_traits<char>::length(str) == 5);
+		assert(op::regex_traits<char>::length(str) == 5);
 		
 		const wchar_t* wstr = L"hello";
-		assert(onigpp::regex_traits<wchar_t>::length(wstr) == 5);
+		assert(op::regex_traits<wchar_t>::length(wstr) == 5);
 		
 		std::cout << "length method works correctly\n";
 	TEST_CASE_END("length")
