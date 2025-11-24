@@ -2,8 +2,7 @@
 
 Oniguruma の正規表現エンジンを C++11 向けに `std::regex` ライクなスタイルでラップしたライブラリです。使いやすさと互換性を重視しています。
 
-![CI](https://github.com/katahiromz/onigpp/actions/workflows/ci.yml/badge.svg)
-![License](LICENSE.txt)
+[English](README.md) ![CI](https://github.com/katahiromz/onigpp/actions/workflows/ci.yml/badge.svg) [License](LICENSE.txt)
 
 ## What's this?
 
