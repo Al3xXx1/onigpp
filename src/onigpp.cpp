@@ -1843,7 +1843,7 @@ OutputIt regex_replace(
 
 template <class BidirIt, class CharT, class Traits>
 void regex_iterator<BidirIt, CharT, Traits>::do_search(BidirIt first, BidirIt last) {
-	// Try to search - note: we allow first == last for empty patterns which can match at end position
+	// Try to search - we allow first == last for zero-width patterns which can match at end position
 	if (!_regex_search_with_context(m_begin, first, last, m_results, *m_regex, m_flags)) {
 		// Invalidate as end iterator
 		m_regex = nullptr;
