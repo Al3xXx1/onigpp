@@ -21,13 +21,17 @@ This repository provides a wrapper to make Oniguruma easy to use from C++. It of
 ## Requirements
 
 - C++11-compatible compiler (Visual Studio 2015+, GCC, Clang, etc.)
-- CMake 3.x
+- CMake >= 3.10 (required by the build scripts)
 - git (for submodule support)
+
+## Supported platforms / Compilers
+
+This project is intended to work with modern C++11-compatible compilers (MSVC 2015+, GCC 5+, Clang 3.8+). CI tests commonly include Windows, Linux, and recent macOS toolchains. If you rely on a different toolchain, please open an issue or test locally.
 
 ## Quick start (usage)
 
 ```cpp
-#define USE_ONIGPP // toggle between onigpp and std
+#define USE_ONIGPP // toggle between onigpp and std (for example/demo only)
 
 #ifdef USE_ONIGPP
     #include "onigpp.h"
@@ -52,6 +56,8 @@ int main() {
 }
 ```
 
+> **Note:** The `#define USE_ONIGPP` toggle in the example above is only for demonstration purposes to show how code can switch between onigpp and `std::regex`. In actual projects, simply include `onigpp.h` and link to the onigpp library.
+
 ## Build
 
 Recommended steps (building from source):
@@ -60,16 +66,28 @@ Recommended steps (building from source):
 git clone https://github.com/katahiromz/onigpp
 cd onigpp
 git submodule update --init --recursive
+```
 
+**Out-of-source build (portable style):**
+
+```bash
 mkdir build
-cmake -B build
+cd build
+cmake ..
+cmake --build .
+```
+
+**CMake shorthand (CMake 3.13+):**
+
+```bash
+cmake -S . -B build
 cmake --build build
 ```
 
 Common CMake options:
-- `-DCMAKE_BUILD_TYPE=Release / Debug`
-- `-DUSE_STD_FOR_TESTS=ON/OFF` (useful to run the same compatibility checks locally as CI)
-- `-DBUILD_SHARED_LIBS=ON/OFF`
+- `-DCMAKE_BUILD_TYPE=Release` or `-DCMAKE_BUILD_TYPE=Debug`
+- `-DUSE_STD_FOR_TESTS=ON` or `-DUSE_STD_FOR_TESTS=OFF` (useful to run the same compatibility checks locally as CI)
+- `-DBUILD_SHARED_LIBS=ON` or `-DBUILD_SHARED_LIBS=OFF`
 
 On Windows (MSVC), specify the Visual Studio generator when running cmake.
 
@@ -78,13 +96,30 @@ On Windows (MSVC), specify the Visual Studio generator when running cmake.
 Run the project's tests:
 
 ```bash
-cmake --build build -t test
-# or run CTest directly:
+cmake --build build --target test
+```
+
+Or run CTest directly from the build directory:
+
+```bash
 cd build
 ctest --output-on-failure
 ```
 
 CI runs tests with both `USE_STD_FOR_TESTS=ON` and `OFF` to verify compatibility.
+
+### Using `USE_STD_FOR_TESTS`
+
+The `USE_STD_FOR_TESTS` CMake option allows you to run the compatibility tests using `std::regex` instead of onigpp. This is useful for verifying that the test patterns themselves are valid and that onigpp behaves consistently with the standard library.
+
+```bash
+# Build with USE_STD_FOR_TESTS enabled
+cmake -S . -B build -DUSE_STD_FOR_TESTS=ON
+cmake --build build
+
+# Run the ecmascript compatibility test
+./build/ecmascript_compat_test
+```
 
 ## Migration from std::regex
 
@@ -128,8 +163,8 @@ The ECMAScript mode in onigpp provides:
 Some features may behave differently from `std::regex`:
 
 1. **Multiline Mode**: 
-   - ✨ **NEW**: The `multiline` flag now emulates ECMAScript semantics when combined with `ECMAScript` mode
-   - When both `ECMAScript` and `multiline` flags are set, onigpp rewrites the pattern at compile time to make `^` and `$` match at line boundaries (after/before `\n`, `\r`, `\r\n`, U+2028, U+2029) without affecting dot behavior
+   - The `multiline` flag emulates ECMAScript semantics when combined with `ECMAScript` mode
+   - When both `ECMAScript` and `multiline` flags are set, onigpp rewrites the pattern at compile time to make `^` and `$` match at line boundaries. The recognized line separators are: `\n`, `\r`, `\r\n`, U+2028 (Line Separator), and U+2029 (Paragraph Separator)
    - This emulation preserves ECMAScript semantics: dot (`.`) still does NOT match newlines (controlled separately by a potential future dotall flag)
    - **Performance note**: Pattern rewriting adds a small CPU cost at regex construction time, but has no runtime matching overhead
    - **Limitations**: The rewrite handles common cases (unescaped `^` and `$` outside character classes). Complex or unusual patterns may have edge cases; please report issues if you find any
@@ -206,6 +241,29 @@ cmake --build build --target ecmascript_compat_test
 ## Header
 
 - [onigpp.h](onigpp.h) — main header
+
+## Contributing
+
+Contributions are welcome! Here's how to get started:
+
+1. **Run tests before submitting**: Ensure all tests pass locally.
+   ```bash
+   cmake -S . -B build
+   cmake --build build
+   cd build && ctest --output-on-failure
+   ```
+
+2. **Run compatibility tests**: The project includes a compatibility harness to verify behavior against `std::regex`.
+   ```bash
+   cmake -S . -B build -DUSE_STD_FOR_TESTS=ON
+   cmake --build build
+   cd build && ctest --output-on-failure
+   ```
+
+3. **General guidelines**:
+   - Keep changes focused and minimal
+   - Update `CHANGELOG.md` if adding significant features or fixes
+   - Add or update tests for new functionality
 
 ## License
 
