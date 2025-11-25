@@ -32,19 +32,25 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 //////////////////////////////////////////////////////////////////////////////
 // RT_DIALOG
 
-1 DIALOG 0, 0, 215, 152
-CAPTION "dialog"
+1 DIALOGEX 0, 0, 265, 180
+CAPTION "Regex Replace"
 STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION | WS_MINIMIZEBOX
-FONT 9, "MS Shell Dlg"
+FONT 9, "MS Shell Dlg", 0, 0, 1
 {
-    EDITTEXT edt1, 2, 5, 82, 80, ES_WANTRETURN | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
-    EDITTEXT edt2, 86, 5, 82, 80, ES_WANTRETURN | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
-    EDITTEXT edt3, 7, 103, 61, 14
-    EDITTEXT edt4, 78, 103, 52, 14
-    PUSHBUTTON "Replace", psh1, 139, 129, 60, 14
-    AUTOCHECKBOX "oniguruma", chx1, 7, 127, 60, 14
-    AUTOCHECKBOX "ECMAScript", chx2, 75, 125, 60, 14
-    AUTOCHECKBOX "icase", chx3, 144, 103, 45, 14
+    LTEXT "Input:", -1, 5, 5, 40, 10
+    EDITTEXT edt1, 5, 20, 125, 80, ES_WANTRETURN | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
+    LTEXT "Output:", -1, 135, 5, 40, 10
+    EDITTEXT edt2, 135, 20, 125, 80, ES_WANTRETURN | ES_READONLY | ES_AUTOVSCROLL | ES_MULTILINE | WS_VSCROLL
+    LTEXT "Pattern:", -1, 5, 105, 45, 10
+    EDITTEXT edt3, 55, 105, 115, 15
+    LTEXT "Replacement:", -1, 5, 125, 45, 10
+    EDITTEXT edt4, 55, 125, 115, 15
+    GROUPBOX "Options", -1, 5, 140, 185, 35
+    AUTOCHECKBOX "oniguruma", chx1, 20, 155, 50, 10
+    AUTOCHECKBOX "ECMAScript", chx2, 80, 155, 55, 10
+    AUTOCHECKBOX "icase", chx3, 145, 155, 35, 10
+    DEFPUSHBUTTON "Replace", psh1, 205, 130, 55, 20
+    PUSHBUTTON "Close", IDCANCEL, 205, 155, 55, 20
 }
 
 //////////////////////////////////////////////////////////////////////////////
