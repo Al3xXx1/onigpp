@@ -9,6 +9,7 @@
   - Named backreferences: `\k<name>`, `\k'name'`
   - Warning: Backreferences can introduce exponential-time backtracking for certain patterns.
 - Added replacement-side Oniguruma-style backreference support when `oniguruma` flag is set:
+  - Whole match: `\0` (equivalent to `$&`)
   - Numeric replacement backreferences: `\1`, `\2`, ... (in addition to existing `$1`, `$2`, ...)
   - Literal backslash: `\\` produces a single backslash
   - Multi-digit backreferences: `\10`, `\11`, ... when 10+ capture groups defined

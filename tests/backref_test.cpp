@@ -325,6 +325,11 @@ void TestOnigurumaReplacementBackrefs() {
 	assert(result == "value=key");
 	std::cout << "  \\1, \\2 replacement: PASSED" << std::endl;
 	
+	// Test \0 for whole match (like $& in $-style)
+	std::string result0 = myns::regex_replace(input, re, std::string("[\\0]"));
+	assert(result0 == "[key:value]");
+	std::cout << "  \\0 (whole match): PASSED" << std::endl;
+	
 	// Test that \\ produces a literal backslash
 	std::string result2 = myns::regex_replace(input, re, std::string("\\\\1"));
 	assert(result2 == "\\1");

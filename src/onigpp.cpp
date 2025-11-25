@@ -1590,17 +1590,18 @@ OutputIt regex_replace(
 						*out++ = CharT('$');
 					}
 				} else if (oniguruma_mode && c == CharT('\\') && i + 1 < fmt.size()) {
-					// Oniguruma-style backreferences: \1, \2, ...
+					// Oniguruma-style backreferences: \0 (whole match), \1, \2, ..., \9, \10, etc.
 					CharT nx = fmt[i + 1];
-					if (nx >= CharT('1') && nx <= CharT('9')) {
-						// Parse numeric backreference \1 through \9 (or multi-digit like \10)
+					if (nx >= CharT('0') && nx <= CharT('9')) {
+						// Parse numeric backreference: \0 is whole match, \1-\9 are groups,
+						// multi-digit like \10 refers to group 10 when available
 						int num = 0;
 						size_type j = i + 1;
 						while (j < fmt.size() && fmt[j] >= CharT('0') && fmt[j] <= CharT('9')) {
 							num = num * 10 + (fmt[j] - CharT('0'));
 							++j;
 						}
-						if (num > 0 && static_cast<size_type>(num) < m.size()) {
+						if (static_cast<size_type>(num) < m.size()) {
 							std::copy(m[num].first, m[num].second, out);
 						}
 						i = j - 1;
