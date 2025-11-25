@@ -42,10 +42,11 @@ FONT 9, "MS Shell Dlg", 0, 0, 1
     EDITTEXT edt3, 55, 105, 115, 15
     LTEXT "Replacement:", -1, 5, 125, 45, 10
     EDITTEXT edt4, 55, 125, 115, 15
-    GROUPBOX "Options", -1, 5, 140, 185, 35
-    AUTOCHECKBOX "oniguruma", chx1, 20, 155, 50, 10
-    AUTOCHECKBOX "ECMAScript", chx2, 80, 155, 55, 10
-    AUTOCHECKBOX "icase", chx3, 145, 155, 35, 10
+    GROUPBOX "Options", -1, 5, 140, 195, 35
+    AUTOCHECKBOX "oniguruma", chx1, 10, 155, 45, 10
+    AUTOCHECKBOX "ecma", chx2, 65, 155, 30, 10
+    AUTOCHECKBOX "icase", chx3, 105, 155, 30, 10
+    AUTOCHECKBOX "multiline", chx4, 145, 155, 35, 10
     PUSHBUTTON "Find", psh2, 205, 105, 55, 20
     PUSHBUTTON "Replace", psh1, 205, 130, 55, 20
     PUSHBUTTON "Replace All", psh3, 205, 155, 55, 20

@@ -133,6 +133,7 @@ void OnFindReplace(HWND hwnd, int action) {
 	BOOL oniguruma = IsDlgButtonChecked(hwnd, chx1) == BST_CHECKED;
 	BOOL ecma = IsDlgButtonChecked(hwnd, chx2) == BST_CHECKED;
 	BOOL icase = IsDlgButtonChecked(hwnd, chx3) == BST_CHECKED;
+	BOOL multiline = IsDlgButtonChecked(hwnd, chx4) == BST_CHECKED;
 
 	TCHAR input_text[256], pattern_text[256], replacement_text[256];
 	GetDlgItemText(hwnd, edt1, input_text, _countof(input_text));
@@ -146,6 +147,7 @@ void OnFindReplace(HWND hwnd, int action) {
 	if (oniguruma) flags |= rex::regex::oniguruma;
 	if (ecma) flags |= rex::regex::ECMAScript;
 	if (icase) flags |= rex::regex::icase;
+	if (multiline) flags |= rex::regex::multiline;
 
 	regex_type re;
 	try {
