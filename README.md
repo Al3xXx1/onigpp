@@ -28,6 +28,10 @@ It offers an API style similar to the standard library's `<regex>`, while exposi
 
 This project is intended to work with modern C++11-compatible compilers (MSVC 2015+, GCC 5+, Clang 3.8+). CI tests commonly include Windows, Linux, and recent macOS toolchains. If you rely on a different toolchain, please open an issue or test locally.
 
+### MSYS2 Support
+
+CI also tests builds under MSYS2 on Windows with both MINGW64 (x86_64) and MINGW32 (i686) environments using the MinGW-w64 toolchain.
+
 ## Quick start (usage)
 
 ```cpp

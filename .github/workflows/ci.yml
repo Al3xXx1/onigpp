@@ -93,3 +93,53 @@ jobs:
           name: test-results-windows-msvc-std${{ matrix.use_std_for_tests }}
           path: build/Testing/Temporary/LastTest.log
           if-no-files-found: ignore
+
+  build-msys2:
+    name: MSYS2 / ${{ matrix.msystem }} / USE_STD=${{ matrix.use_std_for_tests }}
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        msystem: [MINGW64, MINGW32]
+        use_std_for_tests: [ON, OFF]
+        include:
+          - msystem: MINGW64
+            packages: mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja
+          - msystem: MINGW32
+            packages: mingw-w64-i686-toolchain mingw-w64-i686-cmake mingw-w64-i686-ninja
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Checkout repository (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          update: true
+          cache: true
+          install: >-
+            base-devel
+            ${{ matrix.packages }}
+
+      - name: Configure (Ninja)
+        run: cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DUSE_STD_FOR_TESTS=${{ matrix.use_std_for_tests }}
+
+      - name: Build
+        run: cmake --build build -j
+
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-msys2-${{ matrix.msystem }}-std${{ matrix.use_std_for_tests }}
+          path: build/Testing/Temporary/LastTest.log
+          if-no-files-found: ignore
