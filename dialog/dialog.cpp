@@ -1,4 +1,6 @@
-// dialog.cpp
+// dialog.cpp --- Oniguruma++ test dialog
+// Author: katahiromz
+// License: BSD-2-Clause
 #include <windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
@@ -16,15 +18,40 @@ namespace rex = onigpp;
 #endif
 
 bool do_find(const string_type& input, DWORD& iStart, DWORD& iEnd, regex_type& re) {
-	// TODO:
-	return false;
-};
-
-bool do_replace(const string_type& input, const string_type& replacement, string_type& out_str, regex_type& re) {
 	try {
-		out_str = rex::regex_replace(input, re, replacement);
-		return true;
-	} catch (const rex::regex_error& e) {
+		// Ensure positions are within the string bounds
+		const auto input_len = static_cast<typename string_type::size_type>(input.size());
+		if (iStart > input_len) iStart = static_cast<DWORD>(input_len);
+		if (iEnd > input_len) iEnd = static_cast<DWORD>(input_len);
+
+		using const_iter = typename string_type::const_iterator;
+		rex::match_results<const_iter> m;
+
+		// Search forward from the end of current selection first
+		const_iter start_it = input.begin() + static_cast<ptrdiff_t>(iEnd);
+		if (rex::regex_search(start_it, input.end(), m, re)) {
+			// m.position(0) is relative to start_it
+			const auto pos = static_cast<size_t>(iEnd) + static_cast<size_t>(m.position(0));
+			const auto len = static_cast<size_t>(m.length(0));
+			iStart = static_cast<DWORD>(pos);
+			iEnd = static_cast<DWORD>(pos + len);
+			return true;
+		}
+
+		// If not found, wrap around and search from the beginning
+		if (input_len > 0) {
+			if (rex::regex_search(input.begin(), input.end(), m, re)) {
+				const auto pos = static_cast<size_t>(m.position(0));
+				const auto len = static_cast<size_t>(m.length(0));
+				iStart = static_cast<DWORD>(pos);
+				iEnd = static_cast<DWORD>(pos + len);
+				return true;
+			}
+		}
+
+		return false;
+	} catch (const rex::regex_error&) {
+		// Any regex-related error: treat as no match / failure
 		return false;
 	}
 };
@@ -56,39 +83,39 @@ void OnFindReplace(HWND hwnd, int action) {
 		return;
 	}
 
+	DWORD iStart, iEnd;
+	SendDlgItemMessage(hwnd, edt1, EM_GETSEL, (WPARAM)&iStart, (LPARAM)&iEnd);
+
 	switch (action) {
 	case 0: // find
 		{
-			DWORD iStart, iEnd;
-			SendDlgItemMessage(hwnd, edt1, EM_GETSEL, (WPARAM)&iStart, (LPARAM)&iEnd);
-
 			if (!do_find(input, iStart, iEnd, re)) {
 				MessageBox(hwnd, TEXT("No more match"), TEXT("dialog"), MB_ICONINFORMATION);
 				return;
 			}
-
-			SendDlgItemMessage(hwnd, edt1, EM_SETSEL, iStart, iEnd);
 		}
 		break;
 	case 1: // replace
 		{
-			string_type out_str;
-			if (!do_replace(input, replacement, out_str, re)) {
-				MessageBox(hwnd, TEXT("Failure! #2"), NULL, MB_ICONERROR);
-				return;
-			}
-
-			SetDlgItemText(hwnd, edt2, out_str.c_str());
+			// TODO:
+		}
+		break;
+	case 2: // replace all
+		{
+			// TODO:
 		}
 		break;
 	default:
 		assert(0);
-		break;
+		return;
 	}
+
+	SendDlgItemMessage(hwnd, edt1, EM_SETSEL, iStart, iEnd);
 }
 
 // WM_INITDIALOG
 BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam) {
+	SetDlgItemText(hwnd, edt1, TEXT("This is a test.\r\n\r\nThis is a test.\r\n"));
 	CheckDlgButton(hwnd, chx1, BST_CHECKED); // oniguruma
 	return TRUE;
 }
@@ -105,6 +132,9 @@ void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify) {
 		break;
 	case psh2: // Find
 		OnFindReplace(hwnd, 0);
+		break;
+	case psh3: // Replace All
+		OnFindReplace(hwnd, 2);
 		break;
 	}
 }
