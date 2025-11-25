@@ -103,6 +103,11 @@ jobs:
       matrix:
         msystem: [MINGW64, MINGW32]
         use_std_for_tests: [ON, OFF]
+        include:
+          - msystem: MINGW64
+            packages: mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja
+          - msystem: MINGW32
+            packages: mingw-w64-i686-toolchain mingw-w64-i686-cmake mingw-w64-i686-ninja
     defaults:
       run:
         shell: msys2 {0}
@@ -119,7 +124,7 @@ jobs:
           update: true
           install: >-
             base-devel
-            ${{ matrix.msystem == 'MINGW64' && 'mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja' || 'mingw-w64-i686-toolchain mingw-w64-i686-cmake mingw-w64-i686-ninja' }}
+            ${{ matrix.packages }}
 
       - name: Configure (Ninja)
         run: cmake -S . -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DUSE_STD_FOR_TESTS=${{ matrix.use_std_for_tests }}
