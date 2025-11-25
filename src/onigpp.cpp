@@ -222,7 +222,7 @@ void _append_replacement(
 template <class CharT>
 OnigEncoding _get_default_encoding_from_char_type_impl();
 
-// Note: Only the explicit specializations below for char, wchar_t, char16_t, 
+// Note: Only the explicit specializations below for char, wchar_t, char16_t,
 // and char32_t should be used.
 
 template <>
@@ -306,12 +306,12 @@ _regex_search_with_context_impl(
 	bool needs_bow_prefix = (flags & regex_constants::match_not_bow) && (search_offset == 0);
 	bool needs_eow_suffix = (flags & regex_constants::match_not_eow);
 	bool use_match_instead = (flags & regex_constants::match_continuous);
-	
+
 	// Copy the subject range into a temporary contiguous buffer to support
 	// non-contiguous BidirectionalIterators (e.g., std::list, std::deque)
 	std::basic_string<CharT> subject_buf;
 	size_type prefix_len = 0;
-	
+
 	if (needs_bow_prefix) {
 		// Prepend a word character to prevent BOW matching at position 0
 		subject_buf += CharT('a');
@@ -332,7 +332,7 @@ _regex_search_with_context_impl(
 	const CharT* whole_begin_ptr = (buf_total_len > 0) ? subject_buf.c_str() : &empty_char;
 	const CharT* end_ptr = whole_begin_ptr + (total_len + prefix_len); // Original end + prefix (exclude suffix for matching)
 	const CharT* start_ptr = whole_begin_ptr + buf_search_offset;
-	
+
 	// For match_not_eow, we still need to pass the extended end for context,
 	// but the actual match should not extend beyond the original string end
 	const CharT* context_end_ptr = whole_begin_ptr + buf_total_len;
@@ -355,7 +355,7 @@ _regex_search_with_context_impl(
 		// Normal search: can match at any position from start to range
 		r = onig_search(reg, u_start, u_end, u_search_start, u_range, region, onig_options);
 	}
-	
+
 	// Adjust region offsets to account for prefix
 	if (r >= 0 && prefix_len > 0) {
 		for (int i = 0; i < region->num_regs; ++i) {
@@ -379,26 +379,26 @@ _regex_search_with_context_impl(
 		m.m_str_begin = whole_first;
 		m.m_str_end = last;
 		m.clear();
-		
+
 		// Check if nosubs flag is set (either in regex constructor or match-time flags)
 		if (_is_nosubs_active(e.flags(), flags)) {
 			// nosubs: populate only the full match (m[0]), not submatches
 			// This matches std::regex behavior where match_results has size 1
 			m.resize(1);
-			
+
 			int beg = region->beg[0];
 			int end = region->end[0];
-			
+
 			if (beg != ONIG_REGION_NOTPOS) {
 				int beg_chars = beg / sizeof(CharT);
 				int end_chars = end / sizeof(CharT);
-				
+
 				BidirIt sub_start = whole_first;
 				std::advance(sub_start, beg_chars);
-				
+
 				BidirIt sub_end = whole_first;
 				std::advance(sub_end, end_chars);
-				
+
 				m[0].first = sub_start;
 				m[0].second = sub_end;
 				m[0].matched = true;
@@ -407,11 +407,11 @@ _regex_search_with_context_impl(
 				m[0].second = last;
 				m[0].matched = false;
 			}
-			
+
 			onig_region_free(region, 1);
 			return true;
 		}
-		
+
 		m.resize(region->num_regs);
 
 		for (int i = 0; i < region->num_regs; ++i) {
@@ -476,12 +476,12 @@ _regex_search_with_context_impl(
 	bool needs_bow_prefix = (flags & regex_constants::match_not_bow) && (search_offset == 0);
 	bool needs_eow_suffix = (flags & regex_constants::match_not_eow);
 	bool use_match_instead = (flags & regex_constants::match_continuous);
-	
+
 	// If we need BOW/EOW modifications, use buffer-based approach
 	if (needs_bow_prefix || needs_eow_suffix) {
 		std::basic_string<CharT> subject_buf;
 		size_type prefix_len = 0;
-		
+
 		if (needs_bow_prefix) {
 			// Prepend a word character to prevent BOW matching at position 0
 			subject_buf += CharT('a');
@@ -516,7 +516,7 @@ _regex_search_with_context_impl(
 		} else {
 			r = onig_search(reg, u_start, u_end, u_search_start, u_range, region, onig_options);
 		}
-		
+
 		// Adjust region offsets to account for prefix
 		if (r >= 0 && prefix_len > 0) {
 			for (int i = 0; i < region->num_regs; ++i) {
@@ -538,22 +538,22 @@ _regex_search_with_context_impl(
 			m.m_str_begin = whole_first;
 			m.m_str_end = last;
 			m.clear();
-			
+
 			if (_is_nosubs_active(e.flags(), flags)) {
 				m.resize(1);
 				int beg = region->beg[0];
 				int end = region->end[0];
-				
+
 				if (beg != ONIG_REGION_NOTPOS) {
 					int beg_chars = beg / sizeof(CharT);
 					int end_chars = end / sizeof(CharT);
-					
+
 					BidirIt sub_start = whole_first;
 					std::advance(sub_start, beg_chars);
-					
+
 					BidirIt sub_end = whole_first;
 					std::advance(sub_end, end_chars);
-					
+
 					m[0].first = sub_start;
 					m[0].second = sub_end;
 					m[0].matched = true;
@@ -562,11 +562,11 @@ _regex_search_with_context_impl(
 					m[0].second = last;
 					m[0].matched = false;
 				}
-				
+
 				onig_region_free(region, 1);
 				return true;
 			}
-			
+
 			m.resize(region->num_regs);
 
 			for (int i = 0; i < region->num_regs; ++i) {
@@ -607,7 +607,7 @@ _regex_search_with_context_impl(
 			throw regex_error(regex_constants::map_oniguruma_error(r), einfo);
 		}
 	}
-	
+
 	// Fast path: use direct pointer access for contiguous iterators (no BOW/EOW modification needed)
 	// Use stable static buffer for empty ranges to avoid passing nullptr to C API
 	static thread_local CharT empty_char = CharT();
@@ -647,26 +647,26 @@ _regex_search_with_context_impl(
 		m.m_str_begin = whole_first;
 		m.m_str_end = last;
 		m.clear();
-		
+
 		// Check if nosubs flag is set (either in regex constructor or match-time flags)
 		if (_is_nosubs_active(e.flags(), flags)) {
 			// nosubs: populate only the full match (m[0]), not submatches
 			// This matches std::regex behavior where match_results has size 1
 			m.resize(1);
-			
+
 			int beg = region->beg[0];
 			int end = region->end[0];
-			
+
 			if (beg != ONIG_REGION_NOTPOS) {
 				int beg_chars = beg / sizeof(CharT);
 				int end_chars = end / sizeof(CharT);
-				
+
 				BidirIt sub_start = whole_first;
 				std::advance(sub_start, beg_chars);
-				
+
 				BidirIt sub_end = whole_first;
 				std::advance(sub_end, end_chars);
-				
+
 				m[0].first = sub_start;
 				m[0].second = sub_end;
 				m[0].matched = true;
@@ -675,11 +675,11 @@ _regex_search_with_context_impl(
 				m[0].second = last;
 				m[0].matched = false;
 			}
-			
+
 			onig_region_free(region, 1);
 			return true;
 		}
-		
+
 		m.resize(region->num_regs);
 
 		for (int i = 0; i < region->num_regs; ++i) {
@@ -770,7 +770,7 @@ OnigOptionType basic_regex<CharT, Traits>::_options_from_flags(flag_type f) {
 
 	OnigOptionType options = 0;
 	options |= (icase ? ONIG_OPTION_IGNORECASE : 0);
-	
+
 	// ECMAScript mode: handle dot and anchor behavior separately
 	if (ecmascript) {
 		// In ECMAScript:
@@ -786,7 +786,7 @@ OnigOptionType basic_regex<CharT, Traits>::_options_from_flags(flag_type f) {
 		// Non-ECMAScript modes: use original behavior
 		options |= (multiline ? (ONIG_OPTION_MULTILINE | ONIG_OPTION_NEGATE_SINGLELINE) : ONIG_OPTION_SINGLELINE);
 	}
-	
+
 	options |= (extended ? ONIG_OPTION_EXTEND : 0);
 	return options;
 }
@@ -825,28 +825,28 @@ basic_regex<CharT, Traits>::basic_regex(const CharT* s, size_type count, flag_ty
 	OnigErrorInfo err_info;
 	if (!enc) enc = _get_default_encoding_from_char_type<CharT>();
 	m_encoding = enc;
-	
+
 	// Preprocess pattern for ECMAScript compatibility if needed
 	string_type compiled_pattern = m_pattern;
 	if (f & regex_constants::ECMAScript) {
 		compiled_pattern = _preprocess_pattern_for_ecmascript(compiled_pattern);
 	}
-	
+
 	// Preprocess pattern for locale support (when collate flag is set)
 	if (f & regex_constants::collate) {
 		compiled_pattern = _preprocess_pattern_for_locale(compiled_pattern);
 	}
 	const CharT* pattern_ptr = compiled_pattern.c_str();
 	size_type pattern_len = compiled_pattern.length();
-	
-	int err = onig_new(&m_regex, reinterpret_cast<const OnigUChar*>(pattern_ptr), 
-	                   reinterpret_cast<const OnigUChar*>(pattern_ptr + pattern_len), 
+
+	int err = onig_new(&m_regex, reinterpret_cast<const OnigUChar*>(pattern_ptr),
+	                   reinterpret_cast<const OnigUChar*>(pattern_ptr + pattern_len),
 	                   options, enc, syntax, &err_info);
 	if (err != ONIG_NORMAL) throw regex_error(regex_constants::map_oniguruma_error(err), err_info);
 }
 
 template <class CharT, class Traits>
-basic_regex<CharT, Traits>::basic_regex(const self_type& other) 
+basic_regex<CharT, Traits>::basic_regex(const self_type& other)
 	: m_regex(nullptr), m_encoding(other.m_encoding), m_flags(other.m_flags), m_pattern(other.m_pattern), m_locale(other.m_locale)
 {
 	if (!other.m_regex) return; // If the original object is invalid
@@ -860,7 +860,7 @@ basic_regex<CharT, Traits>::basic_regex(const self_type& other)
 	if (m_flags & regex_constants::ECMAScript) {
 		compiled_pattern = _preprocess_pattern_for_ecmascript(compiled_pattern);
 	}
-	
+
 	// Preprocess pattern for locale support (when collate flag is set)
 	if (m_flags & regex_constants::collate) {
 		compiled_pattern = _preprocess_pattern_for_locale(compiled_pattern);
@@ -868,14 +868,14 @@ basic_regex<CharT, Traits>::basic_regex(const self_type& other)
 	const CharT* s = compiled_pattern.c_str();
 	size_type count = compiled_pattern.length();
 
-	int err = onig_new(&m_regex, reinterpret_cast<const OnigUChar*>(s), reinterpret_cast<const OnigUChar*>(s + count), 
+	int err = onig_new(&m_regex, reinterpret_cast<const OnigUChar*>(s), reinterpret_cast<const OnigUChar*>(s + count),
 					   options, m_encoding, syntax, &err_info);
 	if (err != ONIG_NORMAL) throw regex_error(regex_constants::map_oniguruma_error(err), err_info);
 }
 
 template <class CharT, class Traits>
 basic_regex<CharT, Traits>::basic_regex(self_type&& other) noexcept
-	: m_regex(other.m_regex), m_encoding(other.m_encoding), m_flags(other.m_flags), 
+	: m_regex(other.m_regex), m_encoding(other.m_encoding), m_flags(other.m_flags),
 	  m_pattern(std::move(other.m_pattern)), m_locale(std::move(other.m_locale))
 {
 	// leave other in safe state
@@ -932,7 +932,7 @@ unsigned basic_regex<CharT, Traits>::mark_count() const {
 }
 
 template <class CharT, class Traits>
-typename basic_regex<CharT, Traits>::string_type 
+typename basic_regex<CharT, Traits>::string_type
 basic_regex<CharT, Traits>::_preprocess_pattern_for_locale(const string_type& pattern) const {
 	// Conservative POSIX character class expander for locale support
 	// Expands [:digit:], [:alpha:], [:alnum:], [:space:], [:upper:], [:lower:],
@@ -950,12 +950,12 @@ basic_regex<CharT, Traits>::_preprocess_pattern_for_locale(const string_type& pa
 	//
 	// Check if we're using a POSIX syntax that already supports these classes.
 	OnigSyntaxType* syntax = _syntax_from_flags(m_flags);
-	if (syntax == ONIG_SYNTAX_POSIX_BASIC || syntax == ONIG_SYNTAX_POSIX_EXTENDED || 
+	if (syntax == ONIG_SYNTAX_POSIX_BASIC || syntax == ONIG_SYNTAX_POSIX_EXTENDED ||
 	    syntax == ONIG_SYNTAX_GREP) {
 		// These syntaxes natively support POSIX character classes, no preprocessing needed
 		return pattern;
 	}
-	
+
 	// Use SFINAE helper to only compile locale-based expansion for char and wchar_t
 	return posix_class_expander<CharT>::expand(m_locale, pattern);
 }
@@ -975,15 +975,15 @@ posix_class_expander<CharT,
 	>::type>::expand(const std::locale& loc, const string_type& pattern) {
 	typedef std::basic_string<CharT> string_type;
 	typedef typename string_type::size_type size_type;
-	
+
 	string_type result;
 	result.reserve(pattern.size());
-	
+
 	const std::ctype<CharT>& ct = std::use_facet<std::ctype<CharT>>(loc);
-	
+
 	size_type i = 0;
 	const size_type len = pattern.size();
-	
+
 	// Helper lambda to compare strings
 	auto str_equals = [](const string_type& s, const char* literal) -> bool {
 		size_t lit_len = std::strlen(literal);
@@ -993,38 +993,38 @@ posix_class_expander<CharT,
 		}
 		return true;
 	};
-	
+
 	while (i < len) {
 		if (pattern[i] == CharT('[')) {
 			// Start of bracket expression
 			result += pattern[i++];
-			
+
 			// Check for negation
 			if (i < len && pattern[i] == CharT('^')) {
 				result += pattern[i++];
 			}
-			
+
 			// Process inside bracket expression
 			while (i < len && pattern[i] != CharT(']')) {
 				// Check for POSIX class [:name:]
 				if (i + 2 < len && pattern[i] == CharT('[') && pattern[i+1] == CharT(':')) {
 					size_type class_start = i;
 					i += 2;
-					
+
 					// Find the end of POSIX class name
 					size_type name_start = i;
 					while (i < len && pattern[i] != CharT(':')) {
 						i++;
 					}
-					
+
 					if (i + 1 < len && pattern[i] == CharT(':') && pattern[i+1] == CharT(']')) {
 						// Found complete POSIX class
 						string_type class_name = pattern.substr(name_start, i - name_start);
 						i += 2; // skip ':]'
-						
+
 						// Expand the POSIX class based on locale
 						string_type expansion;
-						
+
 						// Test characters in a reasonable range.
 						// For char: all 256 possible values (0-255)
 						// For wchar_t: enumerate up to U+0800 (2048 characters) to avoid very large expansions
@@ -1032,11 +1032,11 @@ posix_class_expander<CharT,
 						// character blocks sufficient for most locale-aware character classification.
 						// Performance: ~2K iterations for wchar_t; fast and practical for typical use cases.
 						const int max_char = (sizeof(CharT) == 1) ? 256 : 0x800;
-						
+
 						// Determine which class we're dealing with
 						std::ctype_base::mask mask = 0;
 						bool recognized = false;
-						
+
 						if (str_equals(class_name, "digit")) {
 							mask = std::ctype_base::digit;
 							recognized = true;
@@ -1071,7 +1071,7 @@ posix_class_expander<CharT,
 							mask = std::ctype_base::graph;
 							recognized = true;
 						}
-						
+
 						if (recognized) {
 							bool first_char = true;
 							for (int c = 0; c < max_char; ++c) {
@@ -1083,7 +1083,7 @@ posix_class_expander<CharT,
 										expansion += CharT('\\');
 										expansion += ch;
 									}
-									// Opening bracket needs escaping 
+									// Opening bracket needs escaping
 									else if (ch == CharT('[')) {
 										expansion += CharT('\\');
 										expansion += ch;
@@ -1106,7 +1106,7 @@ posix_class_expander<CharT,
 									first_char = false;
 								}
 							}
-							
+
 							// Add hyphen at the end if it was in the character class
 							// At the end of a bracket expression, hyphen doesn't need escaping
 							for (int c = 0; c < max_char; ++c) {
@@ -1116,7 +1116,7 @@ posix_class_expander<CharT,
 									break;  // Only add one hyphen
 								}
 							}
-							
+
 							// If expansion is empty (no characters match the class),
 							// we need to ensure the bracket expression isn't empty to avoid
 							// "empty range in char class" errors.
@@ -1125,7 +1125,7 @@ posix_class_expander<CharT,
 							if (expansion.empty()) {
 								expansion += UNMATCHABLE_CHAR;
 							}
-							
+
 							result += expansion;
 						} else {
 							// Not a recognized POSIX class, restore original
@@ -1140,7 +1140,7 @@ posix_class_expander<CharT,
 					result += pattern[i++];
 				}
 			}
-			
+
 			// Add closing bracket
 			if (i < len && pattern[i] == CharT(']')) {
 				result += pattern[i++];
@@ -1150,37 +1150,37 @@ posix_class_expander<CharT,
 			result += pattern[i++];
 		}
 	}
-	
+
 	return result;
 }
 
 template <class CharT, class Traits>
-typename basic_regex<CharT, Traits>::string_type 
+typename basic_regex<CharT, Traits>::string_type
 basic_regex<CharT, Traits>::_preprocess_pattern_for_ecmascript(const string_type& pattern) const {
 	// ECMAScript pattern preprocessing for compatibility with std::regex ECMAScript mode
 	// Handles: \xHH, \uHHHH, \0, named capture normalization, and multiline emulation
-	
+
 	typedef typename string_type::size_type size_type;
-	
+
 	// First, apply multiline emulation if the multiline flag is set
 	string_type working_pattern = pattern;
 	if (m_flags & regex_constants::multiline) {
 		working_pattern = _emulate_ecmascript_multiline(working_pattern);
 	}
-	
+
 	string_type result;
 	result.reserve(working_pattern.size());
-	
+
 	size_type i = 0;
 	const size_type len = working_pattern.size();
-	
+
 	// Helper to check if a character is a hex digit
 	auto is_hex_digit = [](CharT ch) -> bool {
 		return (ch >= CharT('0') && ch <= CharT('9')) ||
 		       (ch >= CharT('a') && ch <= CharT('f')) ||
 		       (ch >= CharT('A') && ch <= CharT('F'));
 	};
-	
+
 	// Helper to convert hex character to value
 	auto hex_value = [](CharT ch) -> int {
 		if (ch >= CharT('0') && ch <= CharT('9')) return ch - CharT('0');
@@ -1188,16 +1188,16 @@ basic_regex<CharT, Traits>::_preprocess_pattern_for_ecmascript(const string_type
 		if (ch >= CharT('A') && ch <= CharT('F')) return ch - CharT('A') + 10;
 		return 0;
 	};
-	
+
 	// Helper to check if character is an octal digit
 	auto is_octal_digit = [](CharT ch) -> bool {
 		return ch >= CharT('0') && ch <= CharT('7');
 	};
-	
+
 	while (i < len) {
 		if (working_pattern[i] == CharT('\\') && i + 1 < len) {
 			CharT next = working_pattern[i + 1];
-			
+
 			// Handle \xHH - two hex digit escape
 			if (next == CharT('x') && i + 3 < len &&
 			    is_hex_digit(working_pattern[i + 2]) && is_hex_digit(working_pattern[i + 3])) {
@@ -1206,7 +1206,7 @@ basic_regex<CharT, Traits>::_preprocess_pattern_for_ecmascript(const string_type
 				i += 4;
 				continue;
 			}
-			
+
 			// Handle \uHHHH - four hex digit Unicode escape
 			if (next == CharT('u') && i + 5 < len &&
 			    is_hex_digit(working_pattern[i + 2]) && is_hex_digit(working_pattern[i + 3]) &&
@@ -1215,7 +1215,7 @@ basic_regex<CharT, Traits>::_preprocess_pattern_for_ecmascript(const string_type
 				         hex_value(working_pattern[i + 3]) * 256 +
 				         hex_value(working_pattern[i + 4]) * 16 +
 				         hex_value(working_pattern[i + 5]);
-				
+
 				// Convert Unicode code point to CharT
 				// Note: \uHHHH can only represent U+0000 to U+FFFF (BMP)
 				// ECMAScript uses UTF-16 surrogate pairs for code points above U+FFFF,
@@ -1242,14 +1242,14 @@ basic_regex<CharT, Traits>::_preprocess_pattern_for_ecmascript(const string_type
 				i += 6;
 				continue;
 			}
-			
+
 			// Handle \0 - null escape (only when NOT followed by octal digit)
 			if (next == CharT('0') && (i + 2 >= len || !is_octal_digit(working_pattern[i + 2]))) {
 				result += CharT('\0');
 				i += 2;
 				continue;
 			}
-			
+
 			// For all other escapes, keep them as-is
 			result += working_pattern[i++];
 			result += working_pattern[i++];
@@ -1258,12 +1258,12 @@ basic_regex<CharT, Traits>::_preprocess_pattern_for_ecmascript(const string_type
 			result += working_pattern[i++];
 		}
 	}
-	
+
 	return result;
 }
 
 template <class CharT, class Traits>
-typename basic_regex<CharT, Traits>::string_type 
+typename basic_regex<CharT, Traits>::string_type
 basic_regex<CharT, Traits>::_emulate_ecmascript_multiline(const string_type& pattern) const {
 	// ECMAScript multiline emulation: Rewrite ^ and $ anchors to match at line boundaries
 	// without enabling Oniguruma's MULTILINE option (which also changes dot behavior).
@@ -1280,42 +1280,42 @@ basic_regex<CharT, Traits>::_emulate_ecmascript_multiline(const string_type& pat
 	// Note: The rewrite must only affect unescaped ^ and $ that are outside character classes.
 	// Performance: Pattern rewriting adds CPU cost at regex compile time.
 	// Limitations: Complex patterns with nested groups or unusual contexts may have edge cases.
-	
+
 	typedef typename string_type::size_type size_type;
 	string_type result;
 	result.reserve(pattern.size() * 2); // Reserve extra space for expansions
-	
+
 	size_type i = 0;
 	const size_type len = pattern.size();
 	bool in_char_class = false;
 	int bracket_depth = 0; // Track nesting level for character classes
-	
+
 	// Replacement strings as constants for maintainability
 	// In ECMAScript multiline: ^ matches at start OR after line terminators
 	// Line terminators: LF (\n), CR (\r), CRLF (\r\n), U+2028 (line separator), U+2029 (paragraph separator)
 	// Note: (?<=\r\n) is a fixed-length lookbehind (2 bytes) and is supported by Oniguruma
 	static constexpr const char* CARET_REPLACEMENT = "(?:\\A|(?:(?<=\\n)|(?<=\\r\\n)|(?<=\\r)|(?<=\\u2028)|(?<=\\u2029)))";
-	
+
 	// In ECMAScript multiline: $ matches at end OR before line terminators
 	static constexpr const char* DOLLAR_REPLACEMENT = "(?:\\z|(?=(?:\\r\\n|\\r|\\n|\\u2028|\\u2029)))";
-	
+
 	// Helper to append the replacement for ^ (start of line)
 	auto append_caret_replacement = [&result]() {
 		for (const char* p = CARET_REPLACEMENT; *p; ++p) {
 			result += CharT(*p);
 		}
 	};
-	
+
 	// Helper to append the replacement for $ (end of line)
 	auto append_dollar_replacement = [&result]() {
 		for (const char* p = DOLLAR_REPLACEMENT; *p; ++p) {
 			result += CharT(*p);
 		}
 	};
-	
+
 	while (i < len) {
 		CharT ch = pattern[i];
-		
+
 		// Handle escape sequences
 		if (ch == CharT('\\') && i + 1 < len) {
 			// Copy escape sequence as-is (two characters)
@@ -1323,7 +1323,7 @@ basic_regex<CharT, Traits>::_emulate_ecmascript_multiline(const string_type& pat
 			result += pattern[i++];
 			continue;
 		}
-		
+
 		// Track character class boundaries
 		if (ch == CharT('[') && !in_char_class) {
 			in_char_class = true;
@@ -1331,7 +1331,7 @@ basic_regex<CharT, Traits>::_emulate_ecmascript_multiline(const string_type& pat
 			result += pattern[i++];
 			continue;
 		}
-		
+
 		if (in_char_class) {
 			if (ch == CharT('[')) {
 				// Nested bracket (e.g., for POSIX classes like [[:digit:]])
@@ -1345,7 +1345,7 @@ basic_regex<CharT, Traits>::_emulate_ecmascript_multiline(const string_type& pat
 			result += pattern[i++];
 			continue;
 		}
-		
+
 		// Not in character class and not escaped: check for ^ and $
 		if (ch == CharT('^')) {
 			// Replace unescaped ^ outside character classes
@@ -1353,27 +1353,27 @@ basic_regex<CharT, Traits>::_emulate_ecmascript_multiline(const string_type& pat
 			i++;
 			continue;
 		}
-		
+
 		if (ch == CharT('$')) {
 			// Replace unescaped $ outside character classes
 			append_dollar_replacement();
 			i++;
 			continue;
 		}
-		
+
 		// Regular character
 		result += pattern[i++];
 	}
-	
+
 	return result;
 }
 
 template <class CharT, class Traits>
-typename basic_regex<CharT, Traits>::locale_type 
+typename basic_regex<CharT, Traits>::locale_type
 basic_regex<CharT, Traits>::imbue(locale_type loc) {
 	locale_type old_locale = m_locale;
 	m_locale = loc;
-	
+
 	// Recompile the regex if we have a pattern
 	if (!m_pattern.empty()) {
 		// Free existing regex
@@ -1381,32 +1381,32 @@ basic_regex<CharT, Traits>::imbue(locale_type loc) {
 			onig_free(m_regex);
 			m_regex = nullptr;
 		}
-		
+
 		// Preprocess pattern for ECMAScript compatibility if needed
 		string_type compiled_pattern = m_pattern;
 		if (m_flags & regex_constants::ECMAScript) {
 			compiled_pattern = _preprocess_pattern_for_ecmascript(compiled_pattern);
 		}
-		
+
 		// Preprocess pattern with new locale (when collate flag is set)
 		if (m_flags & regex_constants::collate) {
 			compiled_pattern = _preprocess_pattern_for_locale(compiled_pattern);
 		}
-		
+
 		// Compile with the preprocessed pattern
 		OnigSyntaxType* syntax = _syntax_from_flags(m_flags);
 		OnigOptionType options = _options_from_flags(m_flags);
 		OnigErrorInfo err_info;
-		
+
 		const CharT* s = compiled_pattern.c_str();
 		size_type count = compiled_pattern.length();
-		
-		int err = onig_new(&m_regex, reinterpret_cast<const OnigUChar*>(s), 
-		                   reinterpret_cast<const OnigUChar*>(s + count), 
+
+		int err = onig_new(&m_regex, reinterpret_cast<const OnigUChar*>(s),
+		                   reinterpret_cast<const OnigUChar*>(s + count),
 		                   options, m_encoding, syntax, &err_info);
 		if (err != ONIG_NORMAL) throw regex_error(regex_constants::map_oniguruma_error(err), err_info);
 	}
-	
+
 	return old_locale;
 }
 
@@ -1448,12 +1448,12 @@ _regex_match_impl(
 	// Handle match_not_bow and match_not_eow by prepending/appending word characters
 	bool needs_bow_prefix = (flags & regex_constants::match_not_bow);
 	bool needs_eow_suffix = (flags & regex_constants::match_not_eow);
-	
+
 	// Copy the subject range into a temporary contiguous buffer to support
 	// non-contiguous BidirectionalIterators (e.g., std::list, std::deque)
 	std::basic_string<CharT> subject_buf;
 	size_type prefix_len = 0;
-	
+
 	if (needs_bow_prefix) {
 		subject_buf += CharT('a');
 		prefix_len = 1;
@@ -1462,7 +1462,7 @@ _regex_match_impl(
 	if (needs_eow_suffix) {
 		subject_buf += CharT('a');
 	}
-	
+
 	size_type buf_len = subject_buf.size();
 
 	// Use stable static buffer for empty ranges to avoid passing nullptr to C API
@@ -1484,7 +1484,7 @@ _regex_match_impl(
 
 	// Execute match at the adjusted position
 	int r = onig_match(reg, u_start, u_end, u_match_at, region, onig_options);
-	
+
 	// Adjust region offsets to account for prefix
 	if (r >= 0 && prefix_len > 0) {
 		for (int i = 0; i < region->num_regs; ++i) {
@@ -1516,26 +1516,26 @@ _regex_match_impl(
 		m.m_str_begin = first;
 		m.m_str_end = last;
 		m.clear();
-		
+
 		// Check if nosubs flag is set (either in regex constructor or match-time flags)
 		if (_is_nosubs_active(e.flags(), flags)) {
 			// nosubs: populate only the full match (m[0]), not submatches
 			// This matches std::regex behavior where match_results has size 1
 			m.resize(1);
-			
+
 			int beg = region->beg[0];
 			int end = region->end[0];
-			
+
 			if (beg != ONIG_REGION_NOTPOS) {
 				int beg_chars = beg / sizeof(CharT);
 				int end_chars = end / sizeof(CharT);
-				
+
 				BidirIt sub_start = first;
 				std::advance(sub_start, beg_chars);
-				
+
 				BidirIt sub_end = first;
 				std::advance(sub_end, end_chars);
-				
+
 				m[0].first = sub_start;
 				m[0].second = sub_end;
 				m[0].matched = true;
@@ -1544,11 +1544,11 @@ _regex_match_impl(
 				m[0].second = last;
 				m[0].matched = false;
 			}
-			
+
 			onig_region_free(region, 1);
 			return true;
 		}
-		
+
 		m.resize(region->num_regs);
 
 		for (int i = 0; i < region->num_regs; ++i) {
@@ -1610,12 +1610,12 @@ _regex_match_impl(
 	// Handle match_not_bow and match_not_eow by prepending/appending word characters
 	bool needs_bow_prefix = (flags & regex_constants::match_not_bow);
 	bool needs_eow_suffix = (flags & regex_constants::match_not_eow);
-	
+
 	// If we need BOW/EOW modifications, use buffer-based approach
 	if (needs_bow_prefix || needs_eow_suffix) {
 		std::basic_string<CharT> subject_buf;
 		size_type prefix_len = 0;
-		
+
 		if (needs_bow_prefix) {
 			subject_buf += CharT('a');
 			prefix_len = 1;
@@ -1624,7 +1624,7 @@ _regex_match_impl(
 		if (needs_eow_suffix) {
 			subject_buf += CharT('a');
 		}
-		
+
 		size_type buf_len = subject_buf.size();
 		const CharT* start_ptr = subject_buf.c_str();
 		const CharT* end_ptr = start_ptr + (len + prefix_len);
@@ -1638,7 +1638,7 @@ _regex_match_impl(
 		if (!region) throw std::bad_alloc();
 
 		int r = onig_match(reg, u_start, u_end, u_match_at, region, onig_options);
-		
+
 		// Adjust region offsets to account for prefix
 		if (r >= 0 && prefix_len > 0) {
 			for (int i = 0; i < region->num_regs; ++i) {
@@ -1666,22 +1666,22 @@ _regex_match_impl(
 			m.m_str_begin = first;
 			m.m_str_end = last;
 			m.clear();
-			
+
 			if (_is_nosubs_active(e.flags(), flags)) {
 				m.resize(1);
 				int beg = region->beg[0];
 				int end = region->end[0];
-				
+
 				if (beg != ONIG_REGION_NOTPOS) {
 					int beg_chars = beg / sizeof(CharT);
 					int end_chars = end / sizeof(CharT);
-					
+
 					BidirIt sub_start = first;
 					std::advance(sub_start, beg_chars);
-					
+
 					BidirIt sub_end = first;
 					std::advance(sub_end, end_chars);
-					
+
 					m[0].first = sub_start;
 					m[0].second = sub_end;
 					m[0].matched = true;
@@ -1690,11 +1690,11 @@ _regex_match_impl(
 					m[0].second = last;
 					m[0].matched = false;
 				}
-				
+
 				onig_region_free(region, 1);
 				return true;
 			}
-			
+
 			m.resize(region->num_regs);
 
 			for (int i = 0; i < region->num_regs; ++i) {
@@ -1735,7 +1735,7 @@ _regex_match_impl(
 			throw regex_error(regex_constants::map_oniguruma_error(r), einfo);
 		}
 	}
-	
+
 	// Fast path: use direct pointer access for contiguous iterators
 	// Use stable static buffer for empty ranges to avoid passing nullptr to C API
 	static thread_local CharT empty_char = CharT();
@@ -1776,26 +1776,26 @@ _regex_match_impl(
 		m.m_str_begin = first;
 		m.m_str_end = last;
 		m.clear();
-		
+
 		// Check if nosubs flag is set (either in regex constructor or match-time flags)
 		if (_is_nosubs_active(e.flags(), flags)) {
 			// nosubs: populate only the full match (m[0]), not submatches
 			// This matches std::regex behavior where match_results has size 1
 			m.resize(1);
-			
+
 			int beg = region->beg[0];
 			int end = region->end[0];
-			
+
 			if (beg != ONIG_REGION_NOTPOS) {
 				int beg_chars = beg / sizeof(CharT);
 				int end_chars = end / sizeof(CharT);
-				
+
 				BidirIt sub_start = first;
 				std::advance(sub_start, beg_chars);
-				
+
 				BidirIt sub_end = first;
 				std::advance(sub_end, end_chars);
-				
+
 				m[0].first = sub_start;
 				m[0].second = sub_end;
 				m[0].matched = true;
@@ -1804,11 +1804,11 @@ _regex_match_impl(
 				m[0].second = last;
 				m[0].matched = false;
 			}
-			
+
 			onig_region_free(region, 1);
 			return true;
 		}
-		
+
 		m.resize(region->num_regs);
 
 		for (int i = 0; i < region->num_regs; ++i) {
@@ -1894,7 +1894,7 @@ OutputIt regex_replace(
 	bool first_only = (flags & regex_constants::format_first_only) != 0;
 	bool no_copy = (flags & regex_constants::format_no_copy) != 0;
 	bool literal = (flags & regex_constants::format_literal) != 0;
-	
+
 	// Check if oniguruma flag is set to enable \1, \2, ... backreferences in replacement
 	bool oniguruma_mode = (regex_access<CharT, Traits>::get_flags(e) & regex_constants::oniguruma) != 0;
 
@@ -2029,7 +2029,7 @@ bool regex_iterator<BidirIt, CharT, Traits>::operator==(const regex_iterator& ot
 
 	// Normal iterator comparison
 	if (m_results.empty() || other.m_results.empty()) return false;
-	
+
 	return m_results[0].first == other.m_results[0].first &&
 		   m_results[0].second == other.m_results[0].second;
 }
@@ -2111,14 +2111,14 @@ void regex_token_iterator<BidirIt, CharT, Traits>::_do_increment() {
 		// C. Check state of next iterator
 		if (m_itor == m_end) {
 			// No more matches - check if we need to output suffix
-			if (std::find(m_subs.begin(), m_subs.end(), -1) != m_subs.end() && 
+			if (std::find(m_subs.begin(), m_subs.end(), -1) != m_subs.end() &&
 				!m_subs.empty()) { // Don't process if already cleared
-				
+
 				// Output suffix (from end of last match to end of string)
-				m_sub_match = sub_match<BidirIt>(prev_match_end, m_last, 
+				m_sub_match = sub_match<BidirIt>(prev_match_end, m_last,
 												 prev_match_end != m_last);
-				
-				// Set m_subs to a special non-empty state (e.g., m_subs = {-2}) 
+
+				// Set m_subs to a special non-empty state (e.g., m_subs = {-2})
 				// to mark as processed for the next increment to terminate
 				m_subs.assign({-2}); // Processed mark
 				m_subs_idx = 0;
@@ -2134,7 +2134,7 @@ void regex_token_iterator<BidirIt, CharT, Traits>::_do_increment() {
 
 			if (sub_idx == -1) {
 				// For -1, output text between previous match end and current match start
-				m_sub_match = sub_match<BidirIt>(prev_match_end, (*m_itor)[0].first, 
+				m_sub_match = sub_match<BidirIt>(prev_match_end, (*m_itor)[0].first,
 												 prev_match_end != (*m_itor)[0].first);
 			} else if (sub_idx >= 0 && sub_idx < (int)(*m_itor).size()) {
 				m_sub_match = (*m_itor)[sub_idx];
@@ -2151,7 +2151,7 @@ regex_token_iterator<BidirIt, CharT, Traits>::regex_token_iterator(
 	BidirIt first, BidirIt last,
 	const regex_type& re,
 	const std::vector<int>& subs,
-	match_flag_type flags) 
+	match_flag_type flags)
 	: m_itor(first, last, re, flags), m_end(), m_subs(subs), m_subs_idx(0), m_last(last)
 {
 	if (m_itor == m_end) {
@@ -2403,37 +2403,37 @@ using vector_char_sub_alloc = ::std::allocator<sub_match<vector_char_iter>>;
 
 // regex_search instantiations for const char* (pointer type - optimized)
 template bool regex_search<cchar_ptr, cchar_ptr_sub_alloc, char, regex_traits<char>>(
-	cchar_ptr, cchar_ptr, match_results<cchar_ptr, cchar_ptr_sub_alloc>&, 
+	cchar_ptr, cchar_ptr, match_results<cchar_ptr, cchar_ptr_sub_alloc>&,
 	const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
 
 // regex_match instantiations for const char* (pointer type - optimized)
 template bool regex_match<cchar_ptr, cchar_ptr_sub_alloc, char, regex_traits<char>>(
-	cchar_ptr, cchar_ptr, match_results<cchar_ptr, cchar_ptr_sub_alloc>&, 
+	cchar_ptr, cchar_ptr, match_results<cchar_ptr, cchar_ptr_sub_alloc>&,
 	const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
 
 // regex_search instantiations for std::list<char>::iterator
 template bool regex_search<list_char_iter, list_char_sub_alloc, char, regex_traits<char>>(
-	list_char_iter, list_char_iter, match_results<list_char_iter, list_char_sub_alloc>&, 
+	list_char_iter, list_char_iter, match_results<list_char_iter, list_char_sub_alloc>&,
 	const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
 
 // regex_search instantiations for std::list<char>::const_iterator
 template bool regex_search<list_char_const_iter, list_char_const_sub_alloc, char, regex_traits<char>>(
-	list_char_const_iter, list_char_const_iter, match_results<list_char_const_iter, list_char_const_sub_alloc>&, 
+	list_char_const_iter, list_char_const_iter, match_results<list_char_const_iter, list_char_const_sub_alloc>&,
 	const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
 
 // regex_match instantiations for std::deque<char>::iterator
 template bool regex_match<deque_char_iter, deque_char_sub_alloc, char, regex_traits<char>>(
-	deque_char_iter, deque_char_iter, match_results<deque_char_iter, deque_char_sub_alloc>&, 
+	deque_char_iter, deque_char_iter, match_results<deque_char_iter, deque_char_sub_alloc>&,
 	const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
 
 // regex_search instantiations for std::deque<char>::iterator
 template bool regex_search<deque_char_iter, deque_char_sub_alloc, char, regex_traits<char>>(
-	deque_char_iter, deque_char_iter, match_results<deque_char_iter, deque_char_sub_alloc>&, 
+	deque_char_iter, deque_char_iter, match_results<deque_char_iter, deque_char_sub_alloc>&,
 	const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
 
 // regex_search instantiations for std::vector<char>::iterator (non-const)
 template bool regex_search<vector_char_iter, vector_char_sub_alloc, char, regex_traits<char>>(
-	vector_char_iter, vector_char_iter, match_results<vector_char_iter, vector_char_sub_alloc>&, 
+	vector_char_iter, vector_char_iter, match_results<vector_char_iter, vector_char_sub_alloc>&,
 	const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
 
 // regex_iterator instantiations for std::list<char>::iterator
@@ -2441,14 +2441,14 @@ template class regex_iterator<list_char_iter, char, regex_traits<char>>;
 
 // _regex_search_with_context instantiation for std::list (needed by regex_iterator)
 template bool _regex_search_with_context<list_char_iter, list_char_sub_alloc, char, regex_traits<char>>(
-	list_char_iter, list_char_iter, list_char_iter, 
-	match_results<list_char_iter, list_char_sub_alloc>&, 
+	list_char_iter, list_char_iter, list_char_iter,
+	match_results<list_char_iter, list_char_sub_alloc>&,
 	const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
 
 // _regex_search_with_context instantiation for const char* (optimized path)
 template bool _regex_search_with_context<cchar_ptr, cchar_ptr_sub_alloc, char, regex_traits<char>>(
-	cchar_ptr, cchar_ptr, cchar_ptr, 
-	match_results<cchar_ptr, cchar_ptr_sub_alloc>&, 
+	cchar_ptr, cchar_ptr, cchar_ptr,
+	match_results<cchar_ptr, cchar_ptr_sub_alloc>&,
 	const basic_regex<char, regex_traits<char>>&, regex_constants::match_flag_type);
 
 } // namespace onigpp

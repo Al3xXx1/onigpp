@@ -74,7 +74,7 @@ namespace regex_constants {
 		error_complexity = 11,  // Same as std::regex_constants::error_complexity
 		error_stack      = 12   // Same as std::regex_constants::error_stack
 	};
-	
+
 	// Map Oniguruma error codes to onigpp error_type
 	inline error_type map_oniguruma_error(int onig_error) {
 		// Pattern syntax errors
@@ -89,17 +89,17 @@ namespace regex_constants {
 		if (onig_error >= -135 && onig_error <= -121) return error_badbrace;   // BRACE/QUANTIFIER errors
 		if (onig_error >= -138 && onig_error <= -136) return error_backref;    // BACKREF errors
 		if (onig_error >= -223 && onig_error <= -139) return error_escape;     // Various syntax errors
-		
+
 		// Resource/complexity errors
 		if (onig_error == -5) return error_space;                               // MEMORY
 		if (onig_error >= -20 && onig_error <= -15) return error_complexity;   // STACK/LIMIT errors
 		if (onig_error >= -12 && onig_error <= -11) return error_stack;        // BUG errors
-		
+
 		// Encoding/type errors
 		if (onig_error >= -403 && onig_error <= -400) return error_ctype;      // ENCODING/CODE_POINT errors
 		if (onig_error >= -405 && onig_error <= -404) return error_collate;    // TOO_MANY/TOO_LONG errors
 		if (onig_error == -406) return error_complexity;                        // VERY_INEFFICIENT_PATTERN
-		
+
 		// Default to error_escape for unknown errors
 		return error_escape;
 	}
@@ -109,12 +109,12 @@ namespace regex_constants {
 	static constexpr syntax_option_type icase = (1 << 0);
 	static constexpr syntax_option_type multiline = (1 << 1);
 	static constexpr syntax_option_type extended = (1 << 2);
-	
+
 	// std::regex compatible flags (bits 3-5, avoiding collision with existing bits 0-2 and 11-15)
 	static constexpr syntax_option_type nosubs = (1 << 3);   // std::nosubs - don't store submatches in match_results
 	static constexpr syntax_option_type optimize = (1 << 4); // std::optimize - currently no-op (reserved for future optimization)
 	static constexpr syntax_option_type collate = (1 << 5);  // std::collate - enable locale-dependent collation
-	
+
 	// Oniguruma-style backreference support (bit 6)
 	// When enabled, numeric backreferences (\1, \2, ...) and named backreferences (\k<name>, \k'name')
 	// are parsed using Oniguruma's semantics. This is enabled by default since Oniguruma natively
@@ -122,7 +122,7 @@ namespace regex_constants {
 	// WARNING: Enabling backreferences can introduce exponential-time backtracking for certain
 	// patterns. Consider using possessive quantifiers or atomic groups for performance-critical code.
 	static constexpr syntax_option_type oniguruma = (1 << 6);
-	
+
 	static constexpr syntax_option_type basic = (1 << 11);
 	static constexpr syntax_option_type awk = (1 << 12);
 	static constexpr syntax_option_type grep = (1 << 13);
@@ -218,11 +218,11 @@ public:
 
 	// Default constructor
 	sub_match() : std::pair<BidirIt, BidirIt>(), matched(false) {}
-	
+
 	// Added 3-argument constructor with default is_matched = true
-	sub_match(BidirIt first, BidirIt second, bool is_matched = true) 
+	sub_match(BidirIt first, BidirIt second, bool is_matched = true)
 		: std::pair<BidirIt, BidirIt>(first, second), matched(is_matched) {}
-	
+
 	// Templated converting constructor
 	template <class OtherBidirIt>
 	sub_match(const sub_match<OtherBidirIt>& other)
@@ -230,17 +230,17 @@ public:
 
 	// Returns the matched substring as a string, or empty string if unmatched
 	// This matches std::sub_match::str() semantics exactly
-	string_type str() const { 
-		return matched ? string_type(this->first, this->second) : string_type(); 
+	string_type str() const {
+		return matched ? string_type(this->first, this->second) : string_type();
 	}
-	
+
 	// Implicit conversion to string_type (preserves str() behavior)
 	operator string_type() const { return str(); }
-	
+
 	// Returns the length of the matched substring, or 0 if unmatched
 	// Note: O(n) for non-random-access iterators (uses std::distance)
-	size_type length() const { 
-		return matched ? std::distance(this->first, this->second) : 0; 
+	size_type length() const {
+		return matched ? std::distance(this->first, this->second) : 0;
 	}
 };
 
@@ -263,73 +263,73 @@ public:
 	using string_type = basic_string<CharT>;
 	using locale_type = std::locale;
 	using char_class_type = int;
-	
+
 	// Constructors
 	regex_traits() : m_locale() {}
 	explicit regex_traits(const locale_type& loc) : m_locale(loc) {}
-	
+
 	static size_type length(const char_type* s) {
 		return std::char_traits<char_type>::length(s);
 	}
-	
+
 	// Get current locale
 	locale_type getloc() const {
 		return m_locale;
 	}
-	
+
 	// Set locale and return the previous one
 	locale_type imbue(const locale_type& loc) {
 		locale_type old = m_locale;
 		m_locale = loc;
 		return old;
 	}
-	
+
 	// Transform a character sequence for collation
 	string_type transform(const char_type* first, const char_type* last) const {
 		// For char and wchar_t, use the locale's collate facet for proper collation
 		// For char16_t and char32_t, fall back to simple copy (portable default)
 		return transform_impl(first, last, typename std::is_same<char_type, char>::type());
 	}
-	
+
 	// Translate a character (identity transformation)
 	char_type translate(char_type c) const {
 		return c;
 	}
-	
+
 	// Check if character is of a specific character class
 	bool isctype(char_type c, char_class_type f) const {
 		// Use the locale's ctype facet for char and wchar_t
 		// For char16_t and char32_t, provide basic fallback
 		return isctype_impl(c, f, typename std::is_same<char_type, char>::type());
 	}
-	
+
 	// Convert character to numeric value
 	int value(char_type c, int base = 10) const {
 		// Support bases 2-36 (digits 0-9 and letters a-z/A-Z)
 		if (base < 2 || base > 36)
 			return -1;
-		
+
 		// Try digit 0-9
 		if (c >= static_cast<char_type>('0') && c <= static_cast<char_type>('9')) {
 			int val = static_cast<int>(c - static_cast<char_type>('0'));
 			return (val < base) ? val : -1;
 		}
-		
+
 		// Try lowercase a-z
 		if (c >= static_cast<char_type>('a') && c <= static_cast<char_type>('z')) {
 			int val = 10 + static_cast<int>(c - static_cast<char_type>('a'));
 			return (val < base) ? val : -1;
 		}
-		
+
 		// Try uppercase A-Z
 		if (c >= static_cast<char_type>('A') && c <= static_cast<char_type>('Z')) {
 			int val = 10 + static_cast<int>(c - static_cast<char_type>('A'));
 			return (val < base) ? val : -1;
 		}
-		
+
 		return -1;
 	}
-	
+
 	// Lookup collation name using the locale's collate facet
 	// Returns a locale-specific collation key for the given character sequence,
 	// which can be used for locale-aware string comparison and collation.
@@ -354,7 +354,7 @@ public:
 
 private:
 	locale_type m_locale;
-	
+
 	// Transform implementation for char
 	string_type transform_impl(const char_type* first, const char_type* last, std::true_type) const {
 		// Use locale's collate facet for char
@@ -366,14 +366,14 @@ private:
 			return string_type(first, last);
 		}
 	}
-	
+
 	// Transform implementation for non-char types
 	string_type transform_impl(const char_type* first, const char_type* last, std::false_type) const {
 		// For wchar_t, use locale's collate facet
 		// For char16_t and char32_t, fall back to simple copy (portable default)
 		return transform_wchar_impl(first, last, typename std::is_same<char_type, wchar_t>::type());
 	}
-	
+
 	// Transform implementation for wchar_t
 	string_type transform_wchar_impl(const char_type* first, const char_type* last, std::true_type) const {
 		try {
@@ -384,13 +384,13 @@ private:
 			return string_type(first, last);
 		}
 	}
-	
+
 	// Transform implementation for char16_t and char32_t
 	string_type transform_wchar_impl(const char_type* first, const char_type* last, std::false_type) const {
 		// Simple copy for char16_t and char32_t (portable default)
 		return string_type(first, last);
 	}
-	
+
 	// isctype implementation for char
 	bool isctype_impl(char_type c, char_class_type f, std::true_type) const {
 		// Use locale's ctype facet for char
@@ -402,14 +402,14 @@ private:
 			return false;
 		}
 	}
-	
+
 	// isctype implementation for non-char types
 	bool isctype_impl(char_type c, char_class_type f, std::false_type) const {
 		// For wchar_t, use locale's ctype facet
 		// For char16_t and char32_t, provide basic fallback
 		return isctype_wchar_impl(c, f, typename std::is_same<char_type, wchar_t>::type());
 	}
-	
+
 	// isctype implementation for wchar_t
 	bool isctype_wchar_impl(char_type c, char_class_type f, std::true_type) const {
 		try {
@@ -419,7 +419,7 @@ private:
 			return false;
 		}
 	}
-	
+
 	// isctype implementation for char16_t and char32_t
 	bool isctype_wchar_impl(char_type c, char_class_type f, std::false_type) const {
 		// Basic fallback for char16_t and char32_t
@@ -452,9 +452,9 @@ public:
 	static constexpr difference_type npos = -1;
 
 	match_results() : m_str_begin(), m_str_end() {}
-	
+
 	// Static assertion to ensure npos semantics match expectations
-	static_assert(npos == static_cast<difference_type>(-1), 
+	static_assert(npos == static_cast<difference_type>(-1),
 	              "npos must be -1 to match std::match_results semantics");
 
 	// Added convenience functions
@@ -546,7 +546,7 @@ public:
 		: basic_regex(s, Traits::length(s), f, enc) { }
 	basic_regex(const CharT* s, size_type count, flag_type f = regex_constants::normal, OnigEncoding enc = nullptr);
 	basic_regex(const string_type& s, flag_type f = regex_constants::normal, OnigEncoding enc = nullptr);
-	
+
 	// Iterator-range constructor
 	template <class BidiIterator>
 	basic_regex(BidiIterator first, BidiIterator last, flag_type f = regex_constants::normal, OnigEncoding enc = nullptr)
@@ -557,7 +557,7 @@ public:
 		self_type tmp(s.c_str(), s.length(), f, enc);
 		swap(tmp);
 	}
-	
+
 	basic_regex(const self_type& other);
 	basic_regex(self_type&& other) noexcept;
 	virtual ~basic_regex();
@@ -591,7 +591,7 @@ public:
 		swap(tmp);
 		return *this;
 	}
-	
+
 	// Iterator-range assign
 	template <class BidiIterator>
 	self_type& assign(BidiIterator first, BidiIterator last, flag_type f = regex_constants::normal, OnigEncoding enc = nullptr) {
@@ -751,13 +751,13 @@ public:
 						 const regex_type& re,
 						 const std::vector<int>& subs = {-1},
 						 match_flag_type flags = regex_constants::match_default);
-	
+
 	// 2a. Convenience constructor with std::initializer_list
 	regex_token_iterator(BidirIt first, BidirIt last,
 						 const regex_type& re,
 						 std::initializer_list<int> subs,
 						 match_flag_type flags = regex_constants::match_default);
-	
+
 	// 2b. Convenience constructor with single int (common case)
 	regex_token_iterator(BidirIt first, BidirIt last,
 						 const regex_type& re,
