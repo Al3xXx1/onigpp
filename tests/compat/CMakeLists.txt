@@ -7,6 +7,6 @@ target_link_libraries(compat_test PRIVATE onigpp)
 
 # Copy patterns.json to build directory
 add_custom_command(TARGET compat_test POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    ${CMAKE_CURRENT_SOURCE_DIR}/patterns.json
-    ${CMAKE_BINARY_DIR}/tests/compat/patterns.json)
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different
+	${CMAKE_CURRENT_SOURCE_DIR}/patterns.json
+	${CMAKE_BINARY_DIR}/tests/compat/patterns.json)
