@@ -155,7 +155,6 @@ public:
         if (flags == "ECMAScript") return std::regex_constants::ECMAScript;
         if (flags == "nosubs") return std::regex_constants::ECMAScript | std::regex_constants::nosubs;
         if (flags == "icase") return std::regex_constants::ECMAScript | std::regex_constants::icase;
-        if (flags == "multiline") return std::regex_constants::ECMAScript | std::regex_constants::multiline;
         return std::regex_constants::ECMAScript;
     }
 
@@ -163,7 +162,6 @@ public:
         if (flags == "ECMAScript") return onigpp::regex_constants::ECMAScript;
         if (flags == "nosubs") return onigpp::regex_constants::ECMAScript | onigpp::regex_constants::nosubs;
         if (flags == "icase") return onigpp::regex_constants::ECMAScript | onigpp::regex_constants::icase;
-        if (flags == "multiline") return onigpp::regex_constants::ECMAScript | onigpp::regex_constants::multiline;
         return onigpp::regex_constants::ECMAScript;
     }
     
