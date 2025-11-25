@@ -1,12 +1,10 @@
 // tests/empty_pattern_test.cpp
-// Verify behaviour for an empty regex pattern ("") against std::regex
+// Verify behavior for an empty regex pattern ("") against std::regex
 // Consistent with the test style used in this repository.
 
 #include "tests.h"
 #include <regex>
 #include <vector>
-#include <iostream>
-#include <cassert>
 
 int main() {
     TESTS_OUTPUT_INIT();
