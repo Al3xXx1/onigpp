@@ -196,7 +196,6 @@ Some features may behave differently from `std::regex`:
 onigpp exposes a set of syntax and compilation flags that let you control matching behavior and compilation options. These are available as enum flags on the wrapper (use bitwise OR to combine). Commonly used flags include:
 
 - `ECMAScript` (default): Use ECMAScript grammar (same as `std::regex` default).
-- `oniguruma`: Use Oniguruma's native syntax and semantics. This enables Oniguruma-specific features such as backreferences, possessive quantifiers, and atomic groups. **Warning**: Enabling backreferences can introduce exponential-time backtracking for certain patterns. Consider using possessive quantifiers or atomic groups for performance-critical code.
 - `icase`: Case-insensitive matching (similar to `std::regex_constants::icase`).
 - `nosubs`: Do not store submatch results (can be used when only a boolean match is needed).
 - `multiline`: Emulate ECMAScript multiline behavior so that `^` and `$` match at line boundaries (see "Multiline Mode").

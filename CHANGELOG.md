@@ -4,6 +4,7 @@
 
 - Added `dialog`.
 - Added `empty_pattern_test` to verify empty regex pattern compatibility with std::regex.
+- Deleted `regex_constants::oniguruma`.
 
 ## 2025-11-25 Ver.6.9.14
 
