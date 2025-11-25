@@ -59,7 +59,12 @@ static bool read_all(std::istream& in, std::string& out) {
 	return true;
 }
 
-int main(int argc, char* argv[]) {
+#ifdef WIN32
+int u8main(int argc, char* argv[])
+#else
+int main(int argc, char* argv[])
+#endif
+{
 	TESTS_IO_INIT();
 
 #ifndef USE_STD_FOR_TOOLS
@@ -191,3 +196,39 @@ int main(int argc, char* argv[]) {
 
 	return exit_code;
 }
+
+// Windows only: get UTF-8 encoded argv from Unicode command line
+#ifdef _WIN32
+#include <windows.h>
+#include <vector>
+#include <string>
+
+static std::vector<char *> get_utf8_argv_from_windows() {
+	int argc = 0;
+	LPWSTR *wargv = CommandLineToArgvW(GetCommandLineW(), &argc);
+	std::vector<char *> args;
+	if (!wargv) return args;
+
+	for (int i = 0; i < argc; ++i) {
+		LPWSTR w = wargv[i];
+		int size = WideCharToMultiByte(CP_UTF8, 0, w, -1, nullptr, 0, nullptr, nullptr);
+		if (size <= 0) {
+			args.emplace_back(); // push empty on failure
+			continue;
+		}
+		std::string s;
+		s.resize(size - 1);
+		WideCharToMultiByte(CP_UTF8, 0, w, -1, &s[0], size, nullptr, nullptr);
+		args.push_back(_strdup(s.c_str()));
+	}
+	LocalFree(wargv);
+	return args;
+}
+
+int main(void) {
+	auto args = get_utf8_argv_from_windows();
+	int ret = u8main(int(args.size()), &args[0]);
+	for (auto& arg : args) free(arg);
+	return ret;
+}
+#endif
