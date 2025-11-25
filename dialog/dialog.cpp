@@ -113,10 +113,6 @@ size_type count_matches(const string_type& input, regex_type& re) {
 // do_find ‚Í find_next_match ‚ð—˜—p‚µ‚ÄŽÀ‘•
 bool do_find(const string_type& input, DWORD& iStart, DWORD& iEnd, regex_type& re) {
 	try {
-		const size_type input_len = input.size();
-		if (iStart > input_len) iStart = static_cast<DWORD>(input_len);
-		if (iEnd > input_len) iEnd = static_cast<DWORD>(input_len);
-
 		size_type match_pos = 0, match_len = 0;
 		const size_type search_from = static_cast<size_type>(iEnd);
 		if (!find_next_match(input, search_from, match_pos, match_len, re)) return false;
@@ -160,6 +156,10 @@ void OnFindReplace(HWND hwnd, int action) {
 	DWORD iStart, iEnd;
 	SendDlgItemMessage(hwnd, edt1, EM_GETSEL, (WPARAM)&iStart, (LPARAM)&iEnd);
 
+	const size_type input_len = input.size();
+	if (iStart > input_len) iStart = static_cast<DWORD>(input_len);
+	if (iEnd > input_len) iEnd = static_cast<DWORD>(input_len);
+
 	switch (action) {
 	case 0: // find
 		{
@@ -172,10 +172,6 @@ void OnFindReplace(HWND hwnd, int action) {
 	case 1: // replace (Windows •W€ UX ‚É]‚¤)
 		{
 			try {
-				const size_type input_len = input.size();
-				if (iStart > input_len) iStart = static_cast<DWORD>(input_len);
-				if (iEnd > input_len) iEnd = static_cast<DWORD>(input_len);
-
 				size_type match_pos = 0, match_len = 0;
 				bool found = false;
 
