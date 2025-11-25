@@ -1,5 +1,9 @@
 # Changelog
 
+## 2025-XX-YY Ver.6.9.14
+
+- Renamed SHIFT_JIS as SJIS.
+
 ## 2025-11-25 Ver.6.9.13
 
 - Added support for `match_not_bow`, `match_not_eow`, and `match_continuous` match flags in C++ wrapper.

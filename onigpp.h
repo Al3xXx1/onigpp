@@ -174,7 +174,7 @@ namespace encoding_constants {
 	static OnigEncoding const UTF32LE = ONIG_ENCODING_UTF32_LE;
 	static OnigEncoding const UTF32BE = ONIG_ENCODING_UTF32_BE;
 	static OnigEncoding const LATIN1 = ONIG_ENCODING_ISO_8859_1;
-	static OnigEncoding const SHIFT_JIS = ONIG_ENCODING_SJIS;
+	static OnigEncoding const SJIS = ONIG_ENCODING_SJIS;
 	static OnigEncoding const EUC_JP = ONIG_ENCODING_EUC_JP;
 	// Other encodings can be added as needed
 }

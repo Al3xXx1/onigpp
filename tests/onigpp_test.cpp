@@ -310,7 +310,7 @@ void TestEncodingAndError() {
 
 #ifndef USE_STD_FOR_TESTS
 	auto UTF8 = myns::encoding_constants::UTF8;
-	auto SJIS = myns::encoding_constants::SHIFT_JIS;
+	auto SJIS = myns::encoding_constants::SJIS;
 
 	// 5.1. Encoding Test (UTF-8, Japanese)
 	// Assuming Oniguruma's default encoding is UTF-8
