@@ -27,15 +27,16 @@
 	#include <io.h>
 	#include <fcntl.h>
 
-	inline void TESTS_OUTPUT_INIT(bool use_wcout = false) {
+	inline void TESTS_IO_INIT(bool use_wcout = false) {
 		if (use_wcout)
 			_setmode(_fileno(stdout), _O_U8TEXT); // Use std::cout instead of std::wcout
 		// Ensure console uses UTF-8 code page for interoperability
 		SetConsoleOutputCP(CP_UTF8);
+		SetConsoleCP(CP_UTF8);
 	}
 #else
 	// For Linux/Mac, setting the locale is usually sufficient
-	inline void TESTS_OUTPUT_INIT(bool use_wcout = false) {
+	inline void TESTS_IO_INIT(bool use_wcout = false) {
 		std::setlocale(LC_ALL, "");
 	}
 #endif
@@ -59,7 +60,7 @@ static bool read_all(std::istream& in, std::string& out) {
 }
 
 int main(int argc, char* argv[]) {
-	TESTS_OUTPUT_INIT();
+	TESTS_IO_INIT();
 
 #ifndef USE_STD_FOR_TOOLS
 	rex::auto_init auto_init;
