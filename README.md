@@ -191,6 +191,32 @@ Some features may behave differently from `std::regex`:
    - Both positive and negative lookahead are supported
    - Lookbehind is also available (an extension beyond basic ECMAScript)
 
+### Oniguruma flags and options
+
+onigpp exposes a set of syntax and compilation flags that let you control matching behavior and compilation options. These are available as enum flags on the wrapper (use bitwise OR to combine). Commonly used flags include:
+
+- `ECMAScript` (default): Use ECMAScript grammar (same as `std::regex` default).
+- `oniguruma`: Use Oniguruma's native syntax and semantics. This enables Oniguruma-specific features such as backreferences, possessive quantifiers, and atomic groups. **Warning**: Enabling backreferences can introduce exponential-time backtracking for certain patterns. Consider using possessive quantifiers or atomic groups for performance-critical code.
+- `icase`: Case-insensitive matching (similar to `std::regex_constants::icase`).
+- `nosubs`: Do not store submatch results (can be used when only a boolean match is needed).
+- `multiline`: Emulate ECMAScript multiline behavior so that `^` and `$` match at line boundaries (see "Multiline Mode").
+- `optimize` / compilation hints: Some wrappers provide hints to request optimized compilation; behavior may be implementation-specific.
+
+Usage example:
+
+```cpp
+#include "onigpp.h"
+namespace rex = onigpp;
+rex::auto_init g_auto_init;
+
+// Combine flags with bitwise OR:
+rex::regex r(R"(^line\d+)", rex::regex::ECMAScript | rex::regex::multiline | rex::regex::icase);
+```
+
+Notes:
+- The exact set and names of flags exposed by the onigpp wrapper are defined in `onigpp.h`. For advanced, engine-specific Oniguruma options and encoding-related settings, consult `onigpp.h` and the Oniguruma documentation.
+- Flags affect how patterns are compiled and matched; some Oniguruma-specific behaviors may not have direct equivalents in `std::regex`.
+
 ### Example Migration
 
 **Before (std::regex):**
