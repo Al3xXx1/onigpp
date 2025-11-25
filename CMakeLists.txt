@@ -84,8 +84,10 @@ target_link_libraries(onigpp PUBLIC onig)
 # tests
 add_subdirectory(tests)
 
-# tools
-add_subdirectory(tools)
+# dialog
+if(WIN32)
+	add_subdirectory(dialog)
+endif()
 
 # CTest tests
 add_test(
