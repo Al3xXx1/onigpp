@@ -167,7 +167,7 @@ namespace regex_constants {
 namespace encoding_constants {
 	// Expose pointers to encodings provided by Oniguruma
 	// Using static instead of inline for C++11 compatibility
-	static OnigEncoding const ASCII  = ONIG_ENCODING_ASCII;
+	static OnigEncoding const ASCII = ONIG_ENCODING_ASCII;
 	static OnigEncoding const UTF8 = ONIG_ENCODING_UTF8;
 	static OnigEncoding const UTF16LE = ONIG_ENCODING_UTF16_LE;
 	static OnigEncoding const UTF16BE = ONIG_ENCODING_UTF16_BE;
