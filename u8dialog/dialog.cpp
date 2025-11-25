@@ -44,46 +44,67 @@ string_type mstr_unescape(const string_type& input) {
 			case char_type('\''): output += char_type('\''); break;
 			case char_type('\"'): output += char_type('\"'); break;
 			case char_type('?'):  output += char_type('\?'); break;
-			case char_type('x'): { // \xXX 形式
+			case char_type('x'): { // \xXX
 				i += 2;
 				string_type hex;
-				while (i < input.size() && _istxdigit(input[i])) {
+				size_t hexlimit = 2;
+				while (hexlimit && i < input.size() && _istxdigit(input[i])) {
 					hex += input[i++];
+					--hexlimit;
 				}
-				output += hex.empty() ? char_type('x') : char_type(_tcstoul(hex.c_str(), nullptr, 16));
-				i--;
+				if (!hex.empty()) {
+					unsigned long value = _tcstoul(hex.c_str(), nullptr, 16);
+					output += char_type(value);
+				} else {
+					output += char_type('x');
+				}
+				i--; // ループがnext分+1しているので調整
 				break;
 			}
-			case char_type('u'): { // \uXXXX 形式
-				if (sizeof(char_type) != 2)
-					throw std::runtime_error("Invalid escape sequence");
-				i += 2;
-				string_type hex;
-				size_t index = 0;
-				while (index < 4 && i < input.size() && _istxdigit(input[i])) {
-					hex += input[i++];
-					++index;
-				}
-				if (index == 4) {
-					output += hex.empty() ? char_type('x') : char_type(_tcstoul(hex.c_str(), nullptr, 16));
+			case char_type('u'): { // \uXXXX
+				if (sizeof(char_type) == 2) {
+					i += 2;
+					string_type hex;
+					size_t hexlimit = 4;
+					while (hexlimit && i < input.size() && _istxdigit(input[i])) {
+						hex += input[i++];
+						--hexlimit;
+					}
+					if (!hex.empty() && hex.size() == 4) {
+						unsigned long value = _tcstoul(hex.c_str(), nullptr, 16);
+						WCHAR sz[32];
+						wsprintfW(sz, L"%04X", char_type(value));
+						MessageBoxW(NULL, sz, NULL, 0);
+						output += char_type(value);
+					} else {
+						// 無効な値はそのまま出力
+						output += char_type('u');
+						output += hex;
+					}
 					i--;
 				} else {
-					throw std::runtime_error("Invalid escape sequence");
+					// char型の場合はそのまま出力
+					output += char_type('u');
 				}
 				break;
 			}
 			default:
-				// 8進数（\123）対応
+				// 8進数 (\123形式)
 				if (next >= char_type('0') && next <= char_type('7')) {
 					size_t j = i + 1;
 					string_type oct;
 					for (int k = 0; k < 3 && j < input.size() && input[j] >= char_type('0') && input[j] <= char_type('7'); ++k, ++j) {
 						oct += input[j];
 					}
-					output += oct.empty() ? next : char_type(_tcstoul(oct.c_str(), nullptr, 8));
-					i += oct.size();
+					if (!oct.empty()) {
+						unsigned long value = _tcstoul(oct.c_str(), nullptr, 8);
+						output += char_type(value);
+						i += oct.size();
+					} else {
+						output += next;
+					}
 				} else {
-					// その他はそのまま
+					// 未知の場合はそのまま
 					output += next;
 				}
 				break;
