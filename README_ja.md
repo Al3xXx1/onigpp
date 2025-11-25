@@ -4,13 +4,13 @@
 
 # Oniguruma++
 
-Oniguruma の正規表現エンジンを C++11 向けに `std::regex` ライクなスタイルでラップしたライブラリです。使いやすさと互換性を重視しています。
-
 ![CI](https://github.com/katahiromz/onigpp/actions/workflows/ci.yml/badge.svg)
 
 ## What's this?
 
-このリポジトリは Oniguruma を C++ から使いやすくするためのラッパーです。標準ライブラリの `<regex>` と似たAPIスタイルで利用でき、Oniguruma の強力な正規表現機能を活かせます。
+Oniguruma の正規表現エンジンを C++11 向けに `std::regex` ライクなスタイルでラップしたライブラリです。使いやすさと互換性を重視しています。
+
+標準ライブラリの `<regex>` と似たAPIスタイルで利用でき、Oniguruma の強力な正規表現機能を活かせます。
 
 ## Features
 
