@@ -122,6 +122,7 @@ jobs:
         with:
           msystem: ${{ matrix.msystem }}
           update: true
+          cache: true
           install: >-
             base-devel
             ${{ matrix.packages }}
