@@ -489,9 +489,36 @@ void TestTokenizeTest() {
 	// Note that regex is matched only two times: when the third value is obtained
 	// the iterator is a suffix iterator.
 	myns::regex ws_re("\\s+"); // whitespace
-	std::copy(myns::sregex_token_iterator(text.begin(), text.end(), ws_re, -1),
-	          myns::sregex_token_iterator(),
-	          std::ostream_iterator<std::string>(std::cout, "\n"));
+
+	size_t index = 0;
+	for (auto it = myns::sregex_token_iterator(text.begin(), text.end(), ws_re, -1),
+		      end = myns::sregex_token_iterator(); it != end; ++it) {
+		std::cout << "<" << it->str() << ">" << std::endl;
+		switch (index) {
+		case 0: assert(it->str() == "Quick"); break;
+		case 1: assert(it->str() == "brown"); break;
+		case 2: assert(it->str() == "fox."); break;
+		default: assert(0);
+		}
+		++index;
+	}
+	assert(index == 3);
+
+	std::string html = "<p><a href=\"http://google.com\">google</a> "
+	                   "< a HREF =\"http://cppreference.com\">cppreference</a>\n</p>";
+	myns::regex url_re("<\\s*A\\s+[^>]*href\\s*=\\s*\"([^\"]*)\"", myns::regex::icase);
+	index = 0;
+	for (auto it = myns::sregex_token_iterator(html.begin(), html.end(), url_re, 1),
+		      end = myns::sregex_token_iterator(); it != end; ++it) {
+		std::cout << "<" << it->str() << ">" << std::endl;
+		switch (index) {
+		case 0: assert(it->str() == "http://google.com"); break;
+		case 1: assert(it->str() == "http://cppreference.com"); break;
+		default: assert(0);
+		}
+		++index;
+	}
+	assert(index == 2);
 
 	TEST_CASE_END("TestTokenizeTest")
 }

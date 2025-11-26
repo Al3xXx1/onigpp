@@ -332,10 +332,35 @@ void TestTokenizeTest() {
 	// the iterator is a suffix iterator.
 	myns::wregex ws_re(L"\\s+"); // whitespace
 
+	size_t index = 0;
 	for (auto it = myns::wsregex_token_iterator(text.begin(), text.end(), ws_re, -1),
 		      end = myns::wsregex_token_iterator(); it != end; ++it) {
-		std::wcout << it->str() << L"\n";
+		std::wcout << L"<" << it->str() << L">" << std::endl;
+		switch (index) {
+		case 0: assert(it->str() == L"Quick"); break;
+		case 1: assert(it->str() == L"brown"); break;
+		case 2: assert(it->str() == L"fox."); break;
+		default: assert(0);
+		}
+		++index;
 	}
+	assert(index == 3);
+
+	std::wstring html = L"<p><a href=\"http://google.com\">google</a> "
+	                    L"< a HREF =\"http://cppreference.com\">cppreference</a>\n</p>";
+	myns::wregex url_re(L"<\\s*A\\s+[^>]*href\\s*=\\s*\"([^\"]*)\"", myns::regex::icase);
+	index = 0;
+	for (auto it = myns::wsregex_token_iterator(html.begin(), html.end(), url_re, 1),
+		      end = myns::wsregex_token_iterator(); it != end; ++it) {
+		std::wcout << L"<" << it->str() << L">" << std::endl;
+		switch (index) {
+		case 0: assert(it->str() == L"http://google.com"); break;
+		case 1: assert(it->str() == L"http://cppreference.com"); break;
+		default: assert(0);
+		}
+		++index;
+	}
+	assert(index == 2);
 
 	TEST_CASE_END("TestTokenizeTest")
 }
