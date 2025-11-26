@@ -506,7 +506,7 @@ void TestTokenizeTest() {
 
 	std::string html = "<p><a href=\"http://google.com\">google</a> "
 	                   "< a HREF =\"http://cppreference.com\">cppreference</a>\n</p>";
-	myns::regex url_re("<\\s*A\\s+[^>]*href\\s*=\\s*\"([^\"]*)\"", myns::regex::icase);
+	myns::regex url_re(std::string("<\\s*A\\s+[^>]*href\\s*=\\s*\"([^\"]*)\""), myns::regex::icase);
 	index = 0;
 	for (auto it = myns::sregex_token_iterator(html.begin(), html.end(), url_re, 1),
 		      end = myns::sregex_token_iterator(); it != end; ++it) {
