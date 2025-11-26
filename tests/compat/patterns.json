@@ -506,5 +506,95 @@
     "operation": "replace",
     "replace_template": "${1}0",
     "encoding_hint": "UTF-8"
+  },
+  {
+    "id": "zero_width_empty_pattern_search",
+    "description": "Empty pattern zero-width search finds match at start",
+    "pattern": "",
+    "flags": "ECMAScript",
+    "input": "abc",
+    "operation": "search",
+    "replace_template": "",
+    "encoding_hint": "UTF-8"
+  },
+  {
+    "id": "zero_width_lookahead_search",
+    "description": "Positive lookahead is zero-width assertion",
+    "pattern": "(?=a)",
+    "flags": "ECMAScript",
+    "input": "abc",
+    "operation": "search",
+    "replace_template": "",
+    "encoding_hint": "UTF-8"
+  },
+  {
+    "id": "zero_width_word_boundary_search",
+    "description": "Word boundary is zero-width assertion",
+    "pattern": "\\b",
+    "flags": "ECMAScript",
+    "input": "word",
+    "operation": "search",
+    "replace_template": "",
+    "encoding_hint": "UTF-8"
+  },
+  {
+    "id": "zero_width_anchor_start",
+    "description": "Start anchor is zero-width",
+    "pattern": "^",
+    "flags": "ECMAScript",
+    "input": "test",
+    "operation": "search",
+    "replace_template": "",
+    "encoding_hint": "UTF-8"
+  },
+  {
+    "id": "zero_width_anchor_end",
+    "description": "End anchor is zero-width",
+    "pattern": "$",
+    "flags": "ECMAScript",
+    "input": "test",
+    "operation": "search",
+    "replace_template": "",
+    "encoding_hint": "UTF-8"
+  },
+  {
+    "id": "zero_width_optional_pattern",
+    "description": "Optional pattern can match zero characters",
+    "pattern": "a?",
+    "flags": "ECMAScript",
+    "input": "b",
+    "operation": "search",
+    "replace_template": "",
+    "encoding_hint": "UTF-8"
+  },
+  {
+    "id": "zero_width_star_pattern",
+    "description": "Star pattern can match zero characters",
+    "pattern": "a*",
+    "flags": "ECMAScript",
+    "input": "b",
+    "operation": "search",
+    "replace_template": "",
+    "encoding_hint": "UTF-8"
+  },
+  {
+    "id": "zero_width_empty_pattern_replace",
+    "description": "Empty pattern replacement inserts at every position",
+    "pattern": "",
+    "flags": "ECMAScript",
+    "input": "ab",
+    "operation": "replace",
+    "replace_template": "-",
+    "encoding_hint": "UTF-8"
+  },
+  {
+    "id": "zero_width_boundary_replace",
+    "description": "Word boundary replacement at word edges",
+    "pattern": "\\b",
+    "flags": "ECMAScript",
+    "input": "word",
+    "operation": "replace",
+    "replace_template": "|",
+    "encoding_hint": "UTF-8"
   }
 ]
