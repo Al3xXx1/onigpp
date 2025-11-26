@@ -71,6 +71,13 @@ if(USE_STD_FOR_TOOLS)
 	add_definitions(-DUSE_STD_FOR_TOOLS)
 endif()
 
+# option NO_TESTS
+option(NO_TESTS "Build without tests" OFF)
+message(STATUS "NO_TESTS: ${NO_TESTS}")
+if(NO_TESTS)
+	add_definitions(-DNO_TESTS)
+endif()
+
 ##############################################################################
 
 # oniguruma
@@ -82,7 +89,9 @@ target_include_directories(onigpp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CUR
 target_link_libraries(onigpp PUBLIC onig)
 
 # tests
-add_subdirectory(tests)
+if(NOT NO_TESTS)
+	add_subdirectory(tests)
+endif()
 
 # dialog
 if(WIN32)
