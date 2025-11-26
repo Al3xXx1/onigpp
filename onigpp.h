@@ -422,6 +422,7 @@ private:
 template <class BidirIt, class Alloc = std::allocator<sub_match<BidirIt>>>
 class match_results : public std::vector<sub_match<BidirIt>, Alloc> {
 public:
+	// Type aliases for std::match_results compatibility
 	using value_type = sub_match<BidirIt>;
 	using const_reference = const value_type&;
 	using reference = value_type&;
@@ -429,6 +430,7 @@ public:
 	using iterator = typename std::vector<sub_match<BidirIt>, Alloc>::iterator;
 	using difference_type = typename std::iterator_traits<BidirIt>::difference_type;
 	using size_type = typename std::allocator_traits<Alloc>::size_type;
+	using allocator_type = Alloc;
 	using char_type = typename std::iterator_traits<BidirIt>::value_type;
 	using string_type = basic_string<char_type>;
 
@@ -438,7 +440,27 @@ public:
 	// "not found" for unmatched or out-of-range submatches
 	static constexpr difference_type npos = -1;
 
+	// Default constructor
 	match_results() : m_str_begin(), m_str_end(), m_ready(false) {}
+
+	// Constructor with allocator
+	explicit match_results(const Alloc& a)
+		: std::vector<sub_match<BidirIt>, Alloc>(a), m_str_begin(), m_str_end(), m_ready(false) {}
+
+	// Copy constructor
+	match_results(const match_results& other) = default;
+
+	// Move constructor
+	match_results(match_results&& other) noexcept = default;
+
+	// Copy assignment operator
+	match_results& operator=(const match_results& other) = default;
+
+	// Move assignment operator
+	match_results& operator=(match_results&& other) noexcept = default;
+
+	// Destructor
+	~match_results() = default;
 
 	// Returns true if the match_results is ready (i.e., has been populated
 	// by a regex_match or regex_search operation, regardless of whether
@@ -450,8 +472,21 @@ public:
 	static_assert(npos == static_cast<difference_type>(-1),
 	              "npos must be -1 to match std::match_results semantics");
 
+	// Returns a copy of the allocator
+	allocator_type get_allocator() const noexcept {
+		return std::vector<sub_match<BidirIt>, Alloc>::get_allocator();
+	}
+
 	// Added convenience functions
-	bool empty() const { return this->size() == 0; }
+	bool empty() const noexcept { return this->size() == 0; }
+
+	// Swap member function
+	void swap(match_results& other) noexcept {
+		std::vector<sub_match<BidirIt>, Alloc>::swap(other);
+		std::swap(m_str_begin, other.m_str_begin);
+		std::swap(m_str_end, other.m_str_end);
+		std::swap(m_ready, other.m_ready);
+	}
 
 	// Shortcut to the entire matched string
 	string_type str(size_type n = 0) const {
@@ -542,6 +577,43 @@ using smatch = match_results<string::const_iterator>;
 using wsmatch = match_results<wstring::const_iterator>;
 using u16smatch = match_results<u16string::const_iterator>;
 using u32smatch = match_results<u32string::const_iterator>;
+
+////////////////////////////////////////////
+// Non-member swap for match_results
+
+template <class BidirIt, class Alloc>
+void swap(match_results<BidirIt, Alloc>& lhs, match_results<BidirIt, Alloc>& rhs) noexcept {
+	lhs.swap(rhs);
+}
+
+////////////////////////////////////////////
+// Comparison operators for match_results
+
+template <class BidirIt, class Alloc>
+bool operator==(const match_results<BidirIt, Alloc>& lhs, const match_results<BidirIt, Alloc>& rhs) {
+	if (lhs.ready() != rhs.ready())
+		return false;
+	if (!lhs.ready())
+		return true;
+	if (lhs.empty() != rhs.empty())
+		return false;
+	if (lhs.empty())
+		return true;
+	if (lhs.size() != rhs.size())
+		return false;
+	for (typename match_results<BidirIt, Alloc>::size_type i = 0; i < lhs.size(); ++i) {
+		if (lhs[i].matched != rhs[i].matched)
+			return false;
+		if (lhs[i].matched && lhs[i].str() != rhs[i].str())
+			return false;
+	}
+	return lhs.prefix().str() == rhs.prefix().str() && lhs.suffix().str() == rhs.suffix().str();
+}
+
+template <class BidirIt, class Alloc>
+bool operator!=(const match_results<BidirIt, Alloc>& lhs, const match_results<BidirIt, Alloc>& rhs) {
+	return !(lhs == rhs);
+}
 
 ////////////////////////////////////////////
 // Forward declarations

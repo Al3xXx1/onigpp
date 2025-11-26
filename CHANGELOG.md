@@ -37,6 +37,16 @@
   - Added `_onig_region_to_match_results()` helper function for regex_match implementations (with full-match checking).
   - Reduced code duplication in `_regex_search_with_context_impl` and `_regex_match_impl` SFINAE variants.
   - Improved maintainability and readability of match result processing code.
+- Enhanced `match_results` class for improved `std::match_results` compatibility:
+  - Added `allocator_type` type alias.
+  - Added `get_allocator()` member function to retrieve the allocator.
+  - Added `swap()` member function for exchanging contents with another `match_results`.
+  - Added non-member `swap()` function for `match_results`.
+  - Added comparison operators: `operator==` and `operator!=`.
+  - Added explicit default, copy, and move constructors.
+  - Added constructor accepting an allocator parameter.
+  - Added `noexcept` specifications to `empty()`, `swap()`, and `get_allocator()`.
+  - Added comprehensive test suite (`match_results_compat_test.cpp`) for new functionality.
 
 ## 2025-11-25 Ver.6.9.14
 
