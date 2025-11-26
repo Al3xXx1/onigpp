@@ -12,6 +12,7 @@
 #include <cassert>
 #include <locale>
 #include <limits>
+#include <ostream>
 
 // Oniguruma
 #define ONIG_ESCAPE_UCHAR_COLLISION // Use UnigUChar instead of UChar
@@ -229,7 +230,217 @@ public:
 	size_type length() const {
 		return matched ? std::distance(this->first, this->second) : 0;
 	}
+
+	// Compare the matched substring with another sub_match
+	// Returns negative if this < other, positive if this > other, 0 if equal
+	// Uses str() semantics: unmatched sub_match compares as empty string
+	int compare(const sub_match& other) const {
+		return str().compare(other.str());
+	}
+
+	// Compare the matched substring with a string_type
+	int compare(const string_type& s) const {
+		return str().compare(s);
+	}
+
+	// Compare the matched substring with a null-terminated C-string
+	int compare(const value_type* s) const {
+		return str().compare(s);
+	}
 };
+
+////////////////////////////////////////////
+// Non-member comparison operators for sub_match
+// std::sub_match provides comprehensive comparison operators for:
+// 1. sub_match vs sub_match
+// 2. sub_match vs string_type (and vice versa)
+// 3. sub_match vs const value_type* (and vice versa)
+
+// sub_match vs sub_match
+template <class BidirIt>
+bool operator==(const sub_match<BidirIt>& lhs, const sub_match<BidirIt>& rhs) {
+	return lhs.compare(rhs) == 0;
+}
+
+template <class BidirIt>
+bool operator!=(const sub_match<BidirIt>& lhs, const sub_match<BidirIt>& rhs) {
+	return lhs.compare(rhs) != 0;
+}
+
+template <class BidirIt>
+bool operator<(const sub_match<BidirIt>& lhs, const sub_match<BidirIt>& rhs) {
+	return lhs.compare(rhs) < 0;
+}
+
+template <class BidirIt>
+bool operator<=(const sub_match<BidirIt>& lhs, const sub_match<BidirIt>& rhs) {
+	return lhs.compare(rhs) <= 0;
+}
+
+template <class BidirIt>
+bool operator>(const sub_match<BidirIt>& lhs, const sub_match<BidirIt>& rhs) {
+	return lhs.compare(rhs) > 0;
+}
+
+template <class BidirIt>
+bool operator>=(const sub_match<BidirIt>& lhs, const sub_match<BidirIt>& rhs) {
+	return lhs.compare(rhs) >= 0;
+}
+
+// sub_match vs string_type
+template <class BidirIt>
+bool operator==(const sub_match<BidirIt>& lhs,
+                const typename sub_match<BidirIt>::string_type& rhs) {
+	return lhs.compare(rhs) == 0;
+}
+
+template <class BidirIt>
+bool operator!=(const sub_match<BidirIt>& lhs,
+                const typename sub_match<BidirIt>::string_type& rhs) {
+	return lhs.compare(rhs) != 0;
+}
+
+template <class BidirIt>
+bool operator<(const sub_match<BidirIt>& lhs,
+               const typename sub_match<BidirIt>::string_type& rhs) {
+	return lhs.compare(rhs) < 0;
+}
+
+template <class BidirIt>
+bool operator<=(const sub_match<BidirIt>& lhs,
+                const typename sub_match<BidirIt>::string_type& rhs) {
+	return lhs.compare(rhs) <= 0;
+}
+
+template <class BidirIt>
+bool operator>(const sub_match<BidirIt>& lhs,
+               const typename sub_match<BidirIt>::string_type& rhs) {
+	return lhs.compare(rhs) > 0;
+}
+
+template <class BidirIt>
+bool operator>=(const sub_match<BidirIt>& lhs,
+                const typename sub_match<BidirIt>::string_type& rhs) {
+	return lhs.compare(rhs) >= 0;
+}
+
+// string_type vs sub_match
+template <class BidirIt>
+bool operator==(const typename sub_match<BidirIt>::string_type& lhs,
+                const sub_match<BidirIt>& rhs) {
+	return rhs.compare(lhs) == 0;
+}
+
+template <class BidirIt>
+bool operator!=(const typename sub_match<BidirIt>::string_type& lhs,
+                const sub_match<BidirIt>& rhs) {
+	return rhs.compare(lhs) != 0;
+}
+
+template <class BidirIt>
+bool operator<(const typename sub_match<BidirIt>::string_type& lhs,
+               const sub_match<BidirIt>& rhs) {
+	return rhs.compare(lhs) > 0;
+}
+
+template <class BidirIt>
+bool operator<=(const typename sub_match<BidirIt>::string_type& lhs,
+                const sub_match<BidirIt>& rhs) {
+	return rhs.compare(lhs) >= 0;
+}
+
+template <class BidirIt>
+bool operator>(const typename sub_match<BidirIt>::string_type& lhs,
+               const sub_match<BidirIt>& rhs) {
+	return rhs.compare(lhs) < 0;
+}
+
+template <class BidirIt>
+bool operator>=(const typename sub_match<BidirIt>::string_type& lhs,
+                const sub_match<BidirIt>& rhs) {
+	return rhs.compare(lhs) <= 0;
+}
+
+// sub_match vs const value_type* (C-string)
+template <class BidirIt>
+bool operator==(const sub_match<BidirIt>& lhs,
+                const typename std::iterator_traits<BidirIt>::value_type* rhs) {
+	return lhs.compare(rhs) == 0;
+}
+
+template <class BidirIt>
+bool operator!=(const sub_match<BidirIt>& lhs,
+                const typename std::iterator_traits<BidirIt>::value_type* rhs) {
+	return lhs.compare(rhs) != 0;
+}
+
+template <class BidirIt>
+bool operator<(const sub_match<BidirIt>& lhs,
+               const typename std::iterator_traits<BidirIt>::value_type* rhs) {
+	return lhs.compare(rhs) < 0;
+}
+
+template <class BidirIt>
+bool operator<=(const sub_match<BidirIt>& lhs,
+                const typename std::iterator_traits<BidirIt>::value_type* rhs) {
+	return lhs.compare(rhs) <= 0;
+}
+
+template <class BidirIt>
+bool operator>(const sub_match<BidirIt>& lhs,
+               const typename std::iterator_traits<BidirIt>::value_type* rhs) {
+	return lhs.compare(rhs) > 0;
+}
+
+template <class BidirIt>
+bool operator>=(const sub_match<BidirIt>& lhs,
+                const typename std::iterator_traits<BidirIt>::value_type* rhs) {
+	return lhs.compare(rhs) >= 0;
+}
+
+// const value_type* (C-string) vs sub_match
+template <class BidirIt>
+bool operator==(const typename std::iterator_traits<BidirIt>::value_type* lhs,
+                const sub_match<BidirIt>& rhs) {
+	return rhs.compare(lhs) == 0;
+}
+
+template <class BidirIt>
+bool operator!=(const typename std::iterator_traits<BidirIt>::value_type* lhs,
+                const sub_match<BidirIt>& rhs) {
+	return rhs.compare(lhs) != 0;
+}
+
+template <class BidirIt>
+bool operator<(const typename std::iterator_traits<BidirIt>::value_type* lhs,
+               const sub_match<BidirIt>& rhs) {
+	return rhs.compare(lhs) > 0;
+}
+
+template <class BidirIt>
+bool operator<=(const typename std::iterator_traits<BidirIt>::value_type* lhs,
+                const sub_match<BidirIt>& rhs) {
+	return rhs.compare(lhs) >= 0;
+}
+
+template <class BidirIt>
+bool operator>(const typename std::iterator_traits<BidirIt>::value_type* lhs,
+               const sub_match<BidirIt>& rhs) {
+	return rhs.compare(lhs) < 0;
+}
+
+template <class BidirIt>
+bool operator>=(const typename std::iterator_traits<BidirIt>::value_type* lhs,
+                const sub_match<BidirIt>& rhs) {
+	return rhs.compare(lhs) <= 0;
+}
+
+// Stream output operator for sub_match
+template <class CharT, class ST, class BidirIt>
+std::basic_ostream<CharT, ST>&
+operator<<(std::basic_ostream<CharT, ST>& os, const sub_match<BidirIt>& m) {
+	return os << m.str();
+}
 
 using csub_match = sub_match<const char*>;
 using wcsub_match = sub_match<const wchar_t*>;
