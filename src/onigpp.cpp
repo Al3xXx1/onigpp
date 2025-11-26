@@ -1689,6 +1689,7 @@ OutputIt regex_replace(
 						if (name_end < fmt.size() && name_end > name_start) {
 							// Found a valid ${...} reference with non-empty content
 							// First check if the content is purely numeric (safe numbered reference)
+							// Use direct comparison with ASCII digits for safety with all CharT types
 							bool is_numeric = true;
 							size_type content_len = name_end - name_start;
 							// Limit numeric parsing to reasonable length to avoid overflow (max 9 digits fits in int)
@@ -1696,7 +1697,9 @@ OutputIt regex_replace(
 								is_numeric = false;
 							} else {
 								for (size_type k = name_start; k < name_end; ++k) {
-									if (!std::isdigit(static_cast<unsigned char>(fmt[k]))) {
+									CharT ch = fmt[k];
+									// Safe ASCII digit check for all character types
+									if (ch < CharT('0') || ch > CharT('9')) {
 										is_numeric = false;
 										break;
 									}
@@ -1706,7 +1709,7 @@ OutputIt regex_replace(
 								// Parse as numbered group reference: ${1}, ${2}, etc.
 								int num = 0;
 								for (size_type k = name_start; k < name_end; ++k) {
-									num = num * 10 + (fmt[k] - CharT('0'));
+									num = num * 10 + static_cast<int>(fmt[k] - CharT('0'));
 								}
 								if (num >= 0 && static_cast<size_type>(num) < m.size()) {
 									std::copy(m[num].first, m[num].second, out);
