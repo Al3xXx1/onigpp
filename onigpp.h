@@ -462,6 +462,10 @@ public:
 	using locale_type = std::locale;
 	using char_class_type = int;
 
+	// Special bit flag for word character class (alnum + underscore)
+	// Uses a high bit that won't conflict with ctype_base::mask values
+	static const char_class_type _word_class_flag = (1 << 16);
+
 	// Constructors
 	regex_traits() : m_locale() {}
 	explicit regex_traits(const locale_type& loc) : m_locale(loc) {}
@@ -489,13 +493,38 @@ public:
 		return transform_impl(first, last, typename std::is_same<char_type, char>::type());
 	}
 
+	// Transform a character sequence for primary collation (ignoring case and accents)
+	// This returns a sort key that represents the primary equivalence class
+	// Used for case-insensitive and accent-insensitive sorting
+	string_type transform_primary(const char_type* first, const char_type* last) const {
+		// For primary collation, we use the same transformation as transform()
+		// and then convert to lowercase for case-insensitive comparison
+		// This is a portable approximation; full primary collation would require ICU
+		return transform_primary_impl(first, last, typename std::is_same<char_type, char>::type());
+	}
+
 	// Translate a character (identity transformation)
 	char_type translate(char_type c) const {
 		return c;
 	}
 
+	// Translate a character for case-insensitive matching
+	// Returns the lowercase version of the character using the locale's ctype facet
+	char_type translate_nocase(char_type c) const {
+		return translate_nocase_impl(c, typename std::is_same<char_type, char>::type());
+	}
+
 	// Check if character is of a specific character class
+	// Handles both standard ctype_base masks and our special _word_class_flag
 	bool isctype(char_type c, char_class_type f) const {
+		// Check for underscore if word class flag is set
+		if ((f & _word_class_flag) != 0) {
+			if (c == static_cast<char_type>('_')) {
+				return true;
+			}
+			// Remove the flag before checking with ctype facet
+			f &= ~_word_class_flag;
+		}
 		// Use the locale's ctype facet for char and wchar_t
 		// For char16_t and char32_t, provide basic fallback
 		return isctype_impl(c, f, typename std::is_same<char_type, char>::type());
@@ -550,6 +579,62 @@ public:
 		return string_type(first, last);
 	}
 
+	// Lookup character class name and return a char_class_type bitmask
+	// Supports standard POSIX character class names: alnum, alpha, blank, cntrl,
+	// digit, graph, lower, print, punct, space, upper, xdigit, d, w, s
+	// Returns 0 if the class name is not recognized
+	char_class_type lookup_classname(const char_type* first, const char_type* last, bool icase = false) const {
+		// Convert input to a narrow string for comparison
+		std::string name;
+		for (const char_type* p = first; p != last; ++p) {
+			// Convert to lowercase for case-insensitive comparison of class names
+			char c = static_cast<char>(*p);
+			if (c >= 'A' && c <= 'Z') c = c - 'A' + 'a';
+			name.push_back(c);
+		}
+
+		// Map class names to ctype_base masks
+		char_class_type result = 0;
+
+		if (name == "alnum") {
+			result = std::ctype_base::alnum;
+		} else if (name == "alpha") {
+			result = std::ctype_base::alpha;
+		} else if (name == "blank") {
+			result = std::ctype_base::blank;
+		} else if (name == "cntrl") {
+			result = std::ctype_base::cntrl;
+		} else if (name == "digit" || name == "d") {
+			result = std::ctype_base::digit;
+		} else if (name == "graph") {
+			result = std::ctype_base::graph;
+		} else if (name == "lower") {
+			result = std::ctype_base::lower;
+		} else if (name == "print") {
+			result = std::ctype_base::print;
+		} else if (name == "punct") {
+			result = std::ctype_base::punct;
+		} else if (name == "space" || name == "s") {
+			result = std::ctype_base::space;
+		} else if (name == "upper") {
+			result = std::ctype_base::upper;
+		} else if (name == "xdigit") {
+			result = std::ctype_base::xdigit;
+		} else if (name == "w") {
+			// \w matches [a-zA-Z0-9_] - word characters
+			// Use alnum combined with our special _word_class_flag to indicate underscore handling
+			result = std::ctype_base::alnum | _word_class_flag;
+		}
+
+		// For case-insensitive matching, if the class is lower or upper,
+		// combine them to match both cases
+		if (icase && (result == std::ctype_base::lower || result == std::ctype_base::upper)) {
+			result = std::ctype_base::alpha;
+		}
+
+		return result;
+	}
+
 private:
 	locale_type m_locale;
 
@@ -589,6 +674,98 @@ private:
 		return string_type(first, last);
 	}
 
+	// transform_primary implementation for char
+	string_type transform_primary_impl(const char_type* first, const char_type* last, std::true_type) const {
+		// Get the standard transform first
+		string_type result = transform_impl(first, last, std::true_type());
+		// Convert to lowercase for primary collation (case-insensitive)
+		try {
+			const std::ctype<char_type>& ct = std::use_facet<std::ctype<char_type>>(m_locale);
+			for (auto& c : result) {
+				c = ct.tolower(c);
+			}
+		} catch (...) {
+			// Fallback: manual ASCII lowercase conversion
+			for (auto& c : result) {
+				if (c >= 'A' && c <= 'Z') c = c - 'A' + 'a';
+			}
+		}
+		return result;
+	}
+
+	// transform_primary implementation for non-char types
+	string_type transform_primary_impl(const char_type* first, const char_type* last, std::false_type) const {
+		return transform_primary_wchar_impl(first, last, typename std::is_same<char_type, wchar_t>::type());
+	}
+
+	// transform_primary implementation for wchar_t
+	string_type transform_primary_wchar_impl(const char_type* first, const char_type* last, std::true_type) const {
+		string_type result = transform_wchar_impl(first, last, std::true_type());
+		try {
+			const std::ctype<char_type>& ct = std::use_facet<std::ctype<char_type>>(m_locale);
+			for (auto& c : result) {
+				c = ct.tolower(c);
+			}
+		} catch (...) {
+			// Fallback: manual ASCII lowercase conversion
+			for (auto& c : result) {
+				if (c >= L'A' && c <= L'Z') c = c - L'A' + L'a';
+			}
+		}
+		return result;
+	}
+
+	// transform_primary implementation for char16_t and char32_t
+	string_type transform_primary_wchar_impl(const char_type* first, const char_type* last, std::false_type) const {
+		// Simple copy with lowercase for char16_t and char32_t
+		string_type result(first, last);
+		for (auto& c : result) {
+			// Basic ASCII lowercase conversion
+			if (c >= static_cast<char_type>('A') && c <= static_cast<char_type>('Z')) {
+				c = c - static_cast<char_type>('A') + static_cast<char_type>('a');
+			}
+		}
+		return result;
+	}
+
+	// translate_nocase implementation for char
+	char_type translate_nocase_impl(char_type c, std::true_type) const {
+		try {
+			const std::ctype<char_type>& ct = std::use_facet<std::ctype<char_type>>(m_locale);
+			return ct.tolower(c);
+		} catch (...) {
+			// Fallback: manual ASCII lowercase
+			if (c >= 'A' && c <= 'Z') return c - 'A' + 'a';
+			return c;
+		}
+	}
+
+	// translate_nocase implementation for non-char types
+	char_type translate_nocase_impl(char_type c, std::false_type) const {
+		return translate_nocase_wchar_impl(c, typename std::is_same<char_type, wchar_t>::type());
+	}
+
+	// translate_nocase implementation for wchar_t
+	char_type translate_nocase_wchar_impl(char_type c, std::true_type) const {
+		try {
+			const std::ctype<char_type>& ct = std::use_facet<std::ctype<char_type>>(m_locale);
+			return ct.tolower(c);
+		} catch (...) {
+			// Fallback: manual ASCII lowercase
+			if (c >= L'A' && c <= L'Z') return c - L'A' + L'a';
+			return c;
+		}
+	}
+
+	// translate_nocase implementation for char16_t and char32_t
+	char_type translate_nocase_wchar_impl(char_type c, std::false_type) const {
+		// Basic ASCII lowercase conversion
+		if (c >= static_cast<char_type>('A') && c <= static_cast<char_type>('Z')) {
+			return c - static_cast<char_type>('A') + static_cast<char_type>('a');
+		}
+		return c;
+	}
+
 	// isctype implementation for char
 	bool isctype_impl(char_type c, char_class_type f, std::true_type) const {
 		// Use locale's ctype facet for char
@@ -619,11 +796,139 @@ private:
 	}
 
 	// isctype implementation for char16_t and char32_t
+	// Provides basic ASCII character class support
 	bool isctype_wchar_impl(char_type c, char_class_type f, std::false_type) const {
-		// Basic fallback for char16_t and char32_t
-		(void)c;
-		(void)f;
-		return false;
+		// Basic ASCII character class support for char16_t and char32_t
+		// This is a portable fallback when no ctype facet is available
+		// Strip the _word_class_flag before casting to ctype_base::mask
+		std::ctype_base::mask mask = static_cast<std::ctype_base::mask>(f & ~_word_class_flag);
+
+		// Helper lambdas for character classification
+		auto is_alpha = [](char_type ch) {
+			return (ch >= static_cast<char_type>('a') && ch <= static_cast<char_type>('z')) ||
+			       (ch >= static_cast<char_type>('A') && ch <= static_cast<char_type>('Z'));
+		};
+		auto is_digit = [](char_type ch) {
+			return ch >= static_cast<char_type>('0') && ch <= static_cast<char_type>('9');
+		};
+		auto is_upper = [](char_type ch) {
+			return ch >= static_cast<char_type>('A') && ch <= static_cast<char_type>('Z');
+		};
+		auto is_lower = [](char_type ch) {
+			return ch >= static_cast<char_type>('a') && ch <= static_cast<char_type>('z');
+		};
+		auto is_space = [](char_type ch) {
+			return ch == static_cast<char_type>(' ') || ch == static_cast<char_type>('\t') ||
+			       ch == static_cast<char_type>('\n') || ch == static_cast<char_type>('\r') ||
+			       ch == static_cast<char_type>('\v') || ch == static_cast<char_type>('\f');
+		};
+		auto is_xdigit = [is_digit](char_type ch) {
+			return is_digit(ch) ||
+			       (ch >= static_cast<char_type>('a') && ch <= static_cast<char_type>('f')) ||
+			       (ch >= static_cast<char_type>('A') && ch <= static_cast<char_type>('F'));
+		};
+		auto is_punct = [](char_type ch) {
+			return (ch >= static_cast<char_type>('!') && ch <= static_cast<char_type>('/')) ||
+			       (ch >= static_cast<char_type>(':') && ch <= static_cast<char_type>('@')) ||
+			       (ch >= static_cast<char_type>('[') && ch <= static_cast<char_type>('`')) ||
+			       (ch >= static_cast<char_type>('{') && ch <= static_cast<char_type>('~'));
+		};
+		auto is_cntrl = [](char_type ch) {
+			return ch < static_cast<char_type>(32) || ch == static_cast<char_type>(127);
+		};
+		auto is_print = [](char_type ch) {
+			return ch >= static_cast<char_type>(32) && ch <= static_cast<char_type>(126);
+		};
+		auto is_graph = [](char_type ch) {
+			return ch > static_cast<char_type>(32) && ch <= static_cast<char_type>(126);
+		};
+		auto is_blank = [](char_type ch) {
+			return ch == static_cast<char_type>(' ') || ch == static_cast<char_type>('\t');
+		};
+
+		// Check each character class - the mask may contain multiple classes
+		// A character matches if it belongs to ANY of the classes specified in the mask
+
+		// For standard ctype masks, check if c is a member of the requested class
+		// alnum = alpha | digit, so check for exact mask matches first
+
+		// Check for alnum (both alpha and digit together)
+		if (mask == std::ctype_base::alnum) {
+			return is_alpha(c) || is_digit(c);
+		}
+
+		// Check for individual classes
+		if (mask == std::ctype_base::digit) {
+			return is_digit(c);
+		}
+		if (mask == std::ctype_base::alpha) {
+			return is_alpha(c);
+		}
+		if (mask == std::ctype_base::upper) {
+			return is_upper(c);
+		}
+		if (mask == std::ctype_base::lower) {
+			return is_lower(c);
+		}
+		if (mask == std::ctype_base::space) {
+			return is_space(c);
+		}
+		if (mask == std::ctype_base::xdigit) {
+			return is_xdigit(c);
+		}
+		if (mask == std::ctype_base::punct) {
+			return is_punct(c);
+		}
+		if (mask == std::ctype_base::cntrl) {
+			return is_cntrl(c);
+		}
+		if (mask == std::ctype_base::print) {
+			return is_print(c);
+		}
+		if (mask == std::ctype_base::graph) {
+			return is_graph(c);
+		}
+		if (mask == std::ctype_base::blank) {
+			return is_blank(c);
+		}
+
+		// For composite masks, check if the character matches any of the classes
+		bool matches = false;
+		if ((mask & std::ctype_base::digit) == std::ctype_base::digit) {
+			if (is_digit(c)) matches = true;
+		}
+		if ((mask & std::ctype_base::alpha) == std::ctype_base::alpha) {
+			if (is_alpha(c)) matches = true;
+		}
+		if ((mask & std::ctype_base::upper) == std::ctype_base::upper) {
+			if (is_upper(c)) matches = true;
+		}
+		if ((mask & std::ctype_base::lower) == std::ctype_base::lower) {
+			if (is_lower(c)) matches = true;
+		}
+		if ((mask & std::ctype_base::space) == std::ctype_base::space) {
+			if (is_space(c)) matches = true;
+		}
+		if ((mask & std::ctype_base::xdigit) == std::ctype_base::xdigit) {
+			if (is_xdigit(c)) matches = true;
+		}
+		if ((mask & std::ctype_base::punct) == std::ctype_base::punct) {
+			if (is_punct(c)) matches = true;
+		}
+		if ((mask & std::ctype_base::cntrl) == std::ctype_base::cntrl) {
+			if (is_cntrl(c)) matches = true;
+		}
+		if ((mask & std::ctype_base::print) == std::ctype_base::print) {
+			if (is_print(c)) matches = true;
+		}
+		if ((mask & std::ctype_base::graph) == std::ctype_base::graph) {
+			if (is_graph(c)) matches = true;
+		}
+		if ((mask & std::ctype_base::blank) == std::ctype_base::blank) {
+			if (is_blank(c)) matches = true;
+		}
+
+		return matches;
 	}
 };
 
