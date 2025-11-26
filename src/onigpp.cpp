@@ -1728,11 +1728,12 @@ OutputIt regex_replace(
 							// Invalid ${...} reference (empty or unclosed), output literal '$'
 							*out++ = CharT('$');
 						}
-					} else if (std::isdigit(static_cast<unsigned char>(nx))) {
+					} else if (nx >= CharT('0') && nx <= CharT('9')) {
+						// Handle $1, $2, ... numeric backreferences
 						int num = 0;
 						size_type j = i + 1;
-						while (j < fmt.size() && std::isdigit(static_cast<unsigned char>(fmt[j]))) {
-							num = num * 10 + (fmt[j] - CharT('0'));
+						while (j < fmt.size() && fmt[j] >= CharT('0') && fmt[j] <= CharT('9')) {
+							num = num * 10 + static_cast<int>(fmt[j] - CharT('0'));
 							++j;
 						}
 						if (num >= 0 && static_cast<size_type>(num) < m.size()) {
@@ -1784,12 +1785,12 @@ OutputIt regex_replace(
 							*out++ = CharT('k');
 							++i;
 						}
-					} else if (std::isdigit(static_cast<unsigned char>(nx))) {
+					} else if (nx >= CharT('0') && nx <= CharT('9')) {
 						// Handle \0, \1, \2, ... numeric backreferences (Oniguruma-style)
 						int num = 0;
 						size_type j = i + 1;
-						while (j < fmt.size() && std::isdigit(static_cast<unsigned char>(fmt[j]))) {
-							num = num * 10 + (fmt[j] - CharT('0'));
+						while (j < fmt.size() && fmt[j] >= CharT('0') && fmt[j] <= CharT('9')) {
+							num = num * 10 + static_cast<int>(fmt[j] - CharT('0'));
 							++j;
 						}
 						if (num >= 0 && static_cast<size_type>(num) < m.size()) {
