@@ -1687,13 +1687,19 @@ OutputIt regex_replace(
 							++name_end;
 						}
 						if (name_end < fmt.size() && name_end > name_start) {
-							// Found a valid ${...} reference
+							// Found a valid ${...} reference with non-empty content
 							// First check if the content is purely numeric (safe numbered reference)
 							bool is_numeric = true;
-							for (size_type k = name_start; k < name_end; ++k) {
-								if (!std::isdigit(static_cast<unsigned char>(fmt[k]))) {
-									is_numeric = false;
-									break;
+							size_type content_len = name_end - name_start;
+							// Limit numeric parsing to reasonable length to avoid overflow (max 9 digits fits in int)
+							if (content_len > 9) {
+								is_numeric = false;
+							} else {
+								for (size_type k = name_start; k < name_end; ++k) {
+									if (!std::isdigit(static_cast<unsigned char>(fmt[k]))) {
+										is_numeric = false;
+										break;
+									}
 								}
 							}
 							if (is_numeric) {
@@ -1716,7 +1722,7 @@ OutputIt regex_replace(
 							}
 							i = name_end; // Skip past the closing '}'
 						} else {
-							// Invalid ${...} reference, output literal '$'
+							// Invalid ${...} reference (empty or unclosed), output literal '$'
 							*out++ = CharT('$');
 						}
 					} else if (std::isdigit(static_cast<unsigned char>(nx))) {
