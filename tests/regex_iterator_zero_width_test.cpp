@@ -232,6 +232,8 @@ void test_end_iterator_equality() {
 	std::cout << "  PASSED" << std::endl;
 }
 
+#ifndef USE_STD_FOR_TESTS
+// This test is only for onigpp - incrementing past end is undefined behavior in std::regex_iterator
 void test_increment_past_end() {
 	std::cout << "Test: Incrementing past end is safe" << std::endl;
 
@@ -250,6 +252,7 @@ void test_increment_past_end() {
 
 	std::cout << "  PASSED" << std::endl;
 }
+#endif
 
 #ifndef USE_STD_FOR_TESTS
 void test_comparison_with_std() {
@@ -309,8 +312,8 @@ int main() {
 	test_optional_patterns();
 	test_consecutive_zero_width();
 	test_end_iterator_equality();
-	test_increment_past_end();
 #ifndef USE_STD_FOR_TESTS
+	test_increment_past_end();
 	test_comparison_with_std();
 #endif
 
