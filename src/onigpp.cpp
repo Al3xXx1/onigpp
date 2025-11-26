@@ -18,7 +18,7 @@ namespace onigpp {
 
 // Primary template - returns pattern unchanged for unsupported types
 template <class CharT, class Enable = void>
-struct posix_class_expander {
+struct _posix_class_expander {
 	typedef std::basic_string<CharT> string_type;
 	static string_type expand(const std::locale& loc, const string_type& pattern) {
 		// For char16_t, char32_t, etc. - no locale support, return unchanged
@@ -28,7 +28,7 @@ struct posix_class_expander {
 
 // Specialization for char and wchar_t where std::ctype is available
 template <class CharT>
-struct posix_class_expander<CharT,
+struct _posix_class_expander<CharT,
 	typename std::enable_if<
 		std::is_same<CharT, char>::value || std::is_same<CharT, wchar_t>::value
 	>::type>
@@ -39,15 +39,15 @@ struct posix_class_expander<CharT,
 
 // Helper to access protected members of basic_regex
 template <class CharT, class Traits>
-struct regex_access : public basic_regex<CharT, Traits> {
+struct _regex_access : public basic_regex<CharT, Traits> {
 	static OnigRegex get(const basic_regex<CharT, Traits>& re) {
-		return static_cast<const regex_access<CharT, Traits>&>(re).m_regex;
+		return static_cast<const _regex_access<CharT, Traits>&>(re).m_regex;
 	}
 	static OnigEncoding get_encoding(const basic_regex<CharT, Traits>& re) {
-		return static_cast<const regex_access<CharT, Traits>&>(re).m_encoding;
+		return static_cast<const _regex_access<CharT, Traits>&>(re).m_encoding;
 	}
 	static regex_constants::syntax_option_type get_flags(const basic_regex<CharT, Traits>& re) {
-		return static_cast<const regex_access<CharT, Traits>&>(re).m_flags;
+		return static_cast<const _regex_access<CharT, Traits>&>(re).m_flags;
 	}
 };
 
@@ -57,22 +57,22 @@ struct regex_access : public basic_regex<CharT, Traits> {
 
 // Primary template - assume non-contiguous
 template <typename Iter>
-struct is_contiguous_iterator : std::false_type {};
+struct _is_contiguous_iterator : std::false_type {};
 
 // Specialization for pointer types (always contiguous)
 template <typename T>
-struct is_contiguous_iterator<T*> : std::true_type {};
+struct _is_contiguous_iterator<T*> : std::true_type {};
 
 template <typename T>
-struct is_contiguous_iterator<const T*> : std::true_type {};
+struct _is_contiguous_iterator<const T*> : std::true_type {};
 
 // Helper function to get pointer from contiguous iterator (enabled only for pointer types)
 template <typename Iter>
 typename std::enable_if<
-	is_contiguous_iterator<Iter>::value,
+	_is_contiguous_iterator<Iter>::value,
 	Iter
 >::type
-get_contiguous_pointer(Iter it) {
+_get_contiguous_pointer(Iter it) {
 	return it;  // For pointers, just return the pointer itself
 }
 
@@ -396,7 +396,7 @@ bool _onig_region_to_match_results(
 // Internal implementation for non-contiguous iterators (uses buffer copy)
 template <class BidirIt, class Alloc, class CharT, class Traits>
 typename std::enable_if<
-	!is_contiguous_iterator<BidirIt>::value,
+	!_is_contiguous_iterator<BidirIt>::value,
 	bool
 >::type
 _regex_search_with_context_impl(
@@ -479,7 +479,7 @@ _regex_search_with_context_impl(
 // Internal implementation for contiguous iterators (optimized, no buffer copy)
 template <class BidirIt, class Alloc, class CharT, class Traits>
 typename std::enable_if<
-	is_contiguous_iterator<BidirIt>::value,
+	_is_contiguous_iterator<BidirIt>::value,
 	bool
 >::type
 _regex_search_with_context_impl(
@@ -552,7 +552,7 @@ _regex_search_with_context_impl(
 	// Fast path: use direct pointer access for contiguous iterators (no BOW/EOW modification needed)
 	// Use stable static buffer for empty ranges to avoid passing nullptr to C API
 	static thread_local CharT empty_char = CharT();
-	const CharT* whole_begin_ptr = (total_len > 0) ? get_contiguous_pointer(whole_first) : &empty_char;
+	const CharT* whole_begin_ptr = (total_len > 0) ? _get_contiguous_pointer(whole_first) : &empty_char;
 	const CharT* end_ptr = whole_begin_ptr + total_len;
 	const CharT* start_ptr = whole_begin_ptr + search_offset;
 
@@ -593,7 +593,7 @@ bool _regex_search_with_context(
 	regex_constants::match_flag_type flags)
 {
 	// Get Oniguruma regex object (using accessor hack)
-	OnigRegex reg = regex_access<CharT, Traits>::get(e);
+	OnigRegex reg = _regex_access<CharT, Traits>::get(e);
 	if (!reg) return false;
 
 	// Options before search execution
@@ -826,7 +826,7 @@ basic_regex<CharT, Traits>::_preprocess_pattern_for_locale(const string_type& pa
 	}
 
 	// Use SFINAE helper to only compile locale-based expansion for char and wchar_t
-	return posix_class_expander<CharT>::expand(m_locale, pattern);
+	return _posix_class_expander<CharT>::expand(m_locale, pattern);
 }
 
 // Implementation of POSIX class expansion for char and wchar_t
@@ -834,11 +834,11 @@ basic_regex<CharT, Traits>::_preprocess_pattern_for_locale(const string_type& pa
 // expressions into explicit character lists based on the imbued locale's ctype facet.
 // The expansion is locale-aware and respects the character classification of the given locale.
 template <class CharT>
-typename posix_class_expander<CharT,
+typename _posix_class_expander<CharT,
 	typename std::enable_if<
 		std::is_same<CharT, char>::value || std::is_same<CharT, wchar_t>::value
 	>::type>::string_type
-posix_class_expander<CharT,
+_posix_class_expander<CharT,
 	typename std::enable_if<
 		std::is_same<CharT, char>::value || std::is_same<CharT, wchar_t>::value
 	>::type>::expand(const std::locale& loc, const string_type& pattern) {
@@ -1303,7 +1303,7 @@ bool regex_search(
 // Internal implementation for non-contiguous iterators (uses buffer copy)
 template <class BidirIt, class Alloc, class CharT, class Traits>
 typename std::enable_if<
-	!is_contiguous_iterator<BidirIt>::value,
+	!_is_contiguous_iterator<BidirIt>::value,
 	bool
 >::type
 _regex_match_impl(
@@ -1368,7 +1368,7 @@ _regex_match_impl(
 // Internal implementation for contiguous iterators (optimized, no buffer copy)
 template <class BidirIt, class Alloc, class CharT, class Traits>
 typename std::enable_if<
-	is_contiguous_iterator<BidirIt>::value,
+	_is_contiguous_iterator<BidirIt>::value,
 	bool
 >::type
 _regex_match_impl(
@@ -1425,7 +1425,7 @@ _regex_match_impl(
 	// Fast path: use direct pointer access for contiguous iterators
 	// Use stable static buffer for empty ranges to avoid passing nullptr to C API
 	static thread_local CharT empty_char = CharT();
-	const CharT* start_ptr = (len > 0) ? get_contiguous_pointer(first) : &empty_char;
+	const CharT* start_ptr = (len > 0) ? _get_contiguous_pointer(first) : &empty_char;
 	const CharT* end_ptr = start_ptr + len;
 
 	// Cast to Oniguruma pointers
@@ -1455,7 +1455,7 @@ bool regex_match(
 	regex_constants::match_flag_type flags)
 {
 	// Get Oniguruma regex object (using accessor hack)
-	OnigRegex reg = regex_access<CharT, Traits>::get(e);
+	OnigRegex reg = _regex_access<CharT, Traits>::get(e);
 	if (!reg) return false;
 
 	// Options before search execution
@@ -1482,7 +1482,7 @@ int _get_named_group_number(
 	const CharT* name_begin,
 	const CharT* name_end)
 {
-	OnigRegex reg = regex_access<CharT, Traits>::get(e);
+	OnigRegex reg = _regex_access<CharT, Traits>::get(e);
 	if (!reg) return -1;
 
 	const OnigUChar* u_name_begin = reinterpret_cast<const OnigUChar*>(name_begin);
@@ -1508,7 +1508,7 @@ OutputIt regex_replace(
 	bool first_only = (flags & regex_constants::format_first_only) != 0;
 	bool no_copy = (flags & regex_constants::format_no_copy) != 0;
 	bool literal = (flags & regex_constants::format_literal) != 0;
-	bool oniguruma_mode = (regex_access<CharT, Traits>::get_flags(e) & regex_constants::oniguruma) != 0;
+	bool oniguruma_mode = (_regex_access<CharT, Traits>::get_flags(e) & regex_constants::oniguruma) != 0;
 
 	// Use regex_iterator to enumerate matches (it already handles zero-width advancement)
 	for (iterator_t it(first, last, e, flags), end; it != end; ++it) {
