@@ -129,6 +129,16 @@ add_executable(match_results_compat_test match_results_compat_test.cpp)
 target_include_directories(match_results_compat_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(match_results_compat_test PRIVATE onigpp)
 
+# regex_iterator_zero_width_test.exe
+add_executable(regex_iterator_zero_width_test regex_iterator_zero_width_test.cpp)
+target_include_directories(regex_iterator_zero_width_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(regex_iterator_zero_width_test PRIVATE onigpp)
+
+# regex_exception_test.exe
+add_executable(regex_exception_test regex_exception_test.cpp)
+target_include_directories(regex_exception_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(regex_exception_test PRIVATE onigpp)
+
 # compat tests subdirectory
 add_subdirectory(compat)
 
@@ -238,4 +248,12 @@ add_test(
 add_test(
 	NAME test26
 	COMMAND $<TARGET_FILE:match_results_compat_test>
+	WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
+add_test(
+	NAME test27
+	COMMAND $<TARGET_FILE:regex_iterator_zero_width_test>
+	WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
+add_test(
+	NAME test28
+	COMMAND $<TARGET_FILE:regex_exception_test>
 	WORKING_DIRECTORY ${PROJECT_BINARY_DIR})

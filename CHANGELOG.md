@@ -2,6 +2,19 @@
 
 ## 2025-XX-YY Ver.6.9.15
 
+- Added comprehensive test suite for `regex_iterator` zero-width match handling:
+  - `regex_iterator_zero_width_test.cpp` tests empty patterns, lookaheads, word boundaries, anchors, and optional patterns.
+  - Verifies std::regex_iterator compatibility for consecutive zero-width matches at string boundaries.
+  - Tests iterator equality and safe increment past end behavior.
+- Added comprehensive test suite for exception handling (`regex_exception_test.cpp`):
+  - Tests that invalid patterns (unclosed parentheses, brackets, leading quantifiers) throw `regex_error`.
+  - Tests that valid operations (search, match, iterator) do not throw on no-match scenarios.
+  - Verifies exception behavior matches std::regex expectations.
+- Added zero-width match test cases to `patterns.json` for compatibility testing:
+  - Empty pattern search and replace
+  - Lookahead, word boundary, and anchor search
+  - Optional and star pattern zero-width matches
+  - Word boundary replacement at word edges
 - Enhanced `sub_match` class for full `std::sub_match` compatibility:
   - Added `compare()` member function for comparing with other `sub_match`, `string_type`, and C-strings.
   - Added comparison operators (`==`, `!=`, `<`, `<=`, `>`, `>=`) for:
