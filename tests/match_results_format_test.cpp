@@ -139,8 +139,10 @@ void TestLiteralDollarReplacement() {
 
 // -----------------------------------------------------------------
 // 5. Escape sequences (\n, \t, \r, \\)
+// Note: Escape sequence processing is onigpp-specific, not available in std::regex
 // -----------------------------------------------------------------
 
+#ifndef USE_STD_FOR_TESTS
 void TestEscapeSequences() {
 	TEST_CASE("TestEscapeSequences")
 
@@ -172,6 +174,7 @@ void TestEscapeSequences() {
 
 	TEST_CASE_END("TestEscapeSequences")
 }
+#endif
 
 // -----------------------------------------------------------------
 // 6. Unmatched submatches (replaced with empty string)
@@ -299,6 +302,8 @@ void TestCStringFormat() {
 // 10. format_literal flag test
 // -----------------------------------------------------------------
 
+#ifndef USE_STD_FOR_TESTS
+// format_literal is onigpp-specific, not available in std::regex
 void TestFormatLiteralFlag() {
 	TEST_CASE("TestFormatLiteralFlag")
 
@@ -315,6 +320,7 @@ void TestFormatLiteralFlag() {
 
 	TEST_CASE_END("TestFormatLiteralFlag")
 }
+#endif
 
 // -----------------------------------------------------------------
 // 11. Wide string support test
@@ -354,12 +360,16 @@ int main() {
 	TestFullMatchReplacement();
 	TestPrefixSuffixReplacement();
 	TestLiteralDollarReplacement();
+#ifndef USE_STD_FOR_TESTS
 	TestEscapeSequences();
+#endif
 	TestUnmatchedSubmatches();
 	TestFullPartialMatchScenarios();
 	TestOutputIteratorFormat();
 	TestCStringFormat();
+#ifndef USE_STD_FOR_TESTS
 	TestFormatLiteralFlag();
+#endif
 	TestWideStringFormat();
 
 	std::cout << "\n========================================================\n";
