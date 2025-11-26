@@ -591,6 +591,7 @@ When using `regex_replace`, the following references can be used in the replacem
 | `` $` `` | Prefix. Inserts the text before the match. |
 | `$'` | Suffix. Inserts the text after the match. |
 | `$$` | Literal dollar sign. Inserts a single `$`. |
+| `${name}` | Named reference. Alternative syntax for named group insertion. |
 
 ### Oniguruma-specific References
 
@@ -600,7 +601,6 @@ The following references are available only when the `oniguruma` flag is specifi
 |-----------|-------------|
 | `${n}` | Safe numbered reference. Allows digits immediately after (e.g., `${1}0` inserts group 1 followed by '0'). |
 | `\k<name>` | Named reference. Inserts the string matched by the named group. |
-| `${name}` | Named reference. Alternative syntax for named group insertion. |
 | `\n` | Numbered reference. Inserts the string matched by the nth capture group (n ≥ 1). |
 | `\0` | Entire matched string. Equivalent to `$&`. |
 | `\\` | Literal backslash. Inserts a single `\`. |
