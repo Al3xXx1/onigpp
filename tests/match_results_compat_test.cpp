@@ -279,8 +279,10 @@ void TestMatchResultsEmptyNoexcept() {
 
 	myns::smatch m;
 	
-	// empty() should be noexcept
+#ifndef USE_STD_FOR_TESTS
+	// empty() should be noexcept (only check for onigpp, std::match_results may vary)
 	static_assert(noexcept(m.empty()), "empty() should be noexcept");
+#endif
 	
 	// Default constructed should be empty
 	assert(m.empty());
@@ -305,8 +307,10 @@ void TestMatchResultsReadyNoexcept() {
 
 	myns::smatch m;
 	
-	// ready() should be noexcept
+#ifndef USE_STD_FOR_TESTS
+	// ready() should be noexcept (only check for onigpp, std::match_results may vary)
 	static_assert(noexcept(m.ready()), "ready() should be noexcept");
+#endif
 	
 	// Default constructed should not be ready
 	assert(!m.ready());
@@ -331,11 +335,13 @@ void TestMatchResultsSwapNoexcept() {
 
 	myns::smatch m1, m2;
 	
-	// Member swap should be noexcept
+#ifndef USE_STD_FOR_TESTS
+	// Member swap should be noexcept (only check for onigpp, std::match_results may vary)
 	static_assert(noexcept(m1.swap(m2)), "swap() member should be noexcept");
 	
 	// Non-member swap should be noexcept
 	static_assert(noexcept(myns::swap(m1, m2)), "swap() non-member should be noexcept");
+#endif
 	
 	std::cout << "swap() is noexcept\n";
 	
