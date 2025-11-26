@@ -139,15 +139,14 @@ namespace regex_constants {
 	// Format control flags for replacement
 	static constexpr match_flag_type format_first_only = (1 << 8);
 	static constexpr match_flag_type format_no_copy = (1 << 9);
-	static constexpr match_flag_type format_literal = (1 << 10);
 
 	// Additional std::regex compatibility flags for word boundaries and continuous matching
 	// match_not_bow: First position is not treated as beginning-of-word (affects \b word boundary)
 	// match_not_eow: Last position is not treated as end-of-word (affects \b word boundary)
 	// match_continuous: Match must start exactly at the search start position (like \G anchor)
-	static constexpr match_flag_type match_not_bow = (1 << 11); // std::regex_constants::match_not_bow
-	static constexpr match_flag_type match_not_eow = (1 << 12); // std::regex_constants::match_not_eow
-	static constexpr match_flag_type match_continuous = (1 << 13); // std::regex_constants::match_continuous
+	static constexpr match_flag_type match_not_bow = (1 << 10); // std::regex_constants::match_not_bow
+	static constexpr match_flag_type match_not_eow = (1 << 11); // std::regex_constants::match_not_eow
+	static constexpr match_flag_type match_continuous = (1 << 12); // std::regex_constants::match_continuous
 
 	// Default values
 	// Note: In std::regex, ECMAScript is the default grammar when no flags are specified
@@ -481,6 +480,48 @@ public:
 	const value_type prefix() const;
 	const value_type suffix() const;
 
+	// Format function - produces a string using the format string fmt
+	// Supports the following placeholders:
+	//   $n   - n-th submatch (0 = full match, 1-9 = capture groups)
+	//   $&   - full match (equivalent to $0)
+	//   $`   - prefix (text before match)
+	//   $'   - suffix (text after match)
+	//   $$   - literal '$'
+	// Escape sequences in fmt:
+	//   \n   - newline
+	//   \t   - tab
+	//   \r   - carriage return
+	//   \\   - literal backslash
+	// Unmatched submatches are replaced with an empty string.
+	template <class OutputIt>
+	OutputIt format(OutputIt out, const char_type* fmt_first, const char_type* fmt_last,
+	                regex_constants::match_flag_type flags = regex_constants::format_default) const;
+
+	template <class OutputIt>
+	OutputIt format(OutputIt out, const string_type& fmt,
+	                regex_constants::match_flag_type flags = regex_constants::format_default) const {
+		return format(out, fmt.data(), fmt.data() + fmt.size(), flags);
+	}
+
+	string_type format(const char_type* fmt_first, const char_type* fmt_last,
+	                   regex_constants::match_flag_type flags = regex_constants::format_default) const {
+		string_type result;
+		format(std::back_inserter(result), fmt_first, fmt_last, flags);
+		return result;
+	}
+
+	string_type format(const string_type& fmt,
+	                   regex_constants::match_flag_type flags = regex_constants::format_default) const {
+		return format(fmt.data(), fmt.data() + fmt.size(), flags);
+	}
+
+	string_type format(const char_type* fmt,
+	                   regex_constants::match_flag_type flags = regex_constants::format_default) const {
+		const char_type* end = fmt;
+		while (*end) ++end;
+		return format(fmt, end, flags);
+	}
+
 public:
 	BidirIt m_str_begin; // Start iterator of the search range
 	BidirIt m_str_end;   // End iterator of the search range
@@ -789,6 +830,145 @@ inline const sub_match<BidirIt> match_results<BidirIt, Alloc>::suffix() const {
 		return sub_match<BidirIt>(m_str_end, m_str_end, false);
 	}
 	return sub_match<BidirIt>((*this)[0].second, m_str_end, true);
+}
+
+// match_results::format implementation
+// Produces a string using the format string, supporting placeholders:
+//   $n   - n-th submatch (0-9, multi-digit supported)
+//   $&   - full match (equivalent to $0)
+//   $`   - prefix (text before match)
+//   $'   - suffix (text after match)
+//   $$   - literal '$'
+// Escape sequences:
+//   \n   - newline
+//   \t   - tab
+//   \r   - carriage return
+//   \\   - literal backslash
+// Unmatched submatches are replaced with an empty string.
+template <class BidirIt, class Alloc>
+template <class OutputIt>
+OutputIt match_results<BidirIt, Alloc>::format(
+	OutputIt out,
+	const char_type* fmt_first,
+	const char_type* fmt_last,
+	regex_constants::match_flag_type flags) const
+{
+	(void)flags; // Currently unused, reserved for future use
+
+	const char_type* p = fmt_first;
+	while (p != fmt_last) {
+		// Handle '$' placeholders
+		if (*p == char_type('$') && p + 1 != fmt_last) {
+			char_type next = *(p + 1);
+
+			// $$ -> literal '$'
+			if (next == char_type('$')) {
+				*out++ = char_type('$');
+				p += 2;
+				continue;
+			}
+
+			// $& -> full match ($0)
+			if (next == char_type('&')) {
+				if (!this->empty() && (*this)[0].matched) {
+					out = std::copy((*this)[0].first, (*this)[0].second, out);
+				}
+				p += 2;
+				continue;
+			}
+
+			// $` -> prefix
+			if (next == char_type('`')) {
+				auto pf = this->prefix();
+				if (pf.matched) {
+					out = std::copy(pf.first, pf.second, out);
+				}
+				p += 2;
+				continue;
+			}
+
+			// $' -> suffix
+			if (next == char_type('\'')) {
+				auto sf = this->suffix();
+				if (sf.matched) {
+					out = std::copy(sf.first, sf.second, out);
+				}
+				p += 2;
+				continue;
+			}
+
+			// $n, $nn - numeric capture group reference
+			if (next >= char_type('0') && next <= char_type('9')) {
+				// Parse multi-digit group number with overflow protection
+				// Limit parsing to reasonable number of digits (max 9 for safety with int)
+				int num = 0;
+				const char_type* q = p + 1;
+				int digit_count = 0;
+				const int max_digits = 9;  // Prevents overflow for int
+				while (q != fmt_last && *q >= char_type('0') && *q <= char_type('9') && digit_count < max_digits) {
+					num = num * 10 + static_cast<int>(*q - char_type('0'));
+					++q;
+					++digit_count;
+				}
+				// Skip any remaining digits beyond max_digits
+				while (q != fmt_last && *q >= char_type('0') && *q <= char_type('9')) {
+					++q;
+				}
+				// Output the submatch if valid and matched
+				if (static_cast<size_type>(num) < this->size() && (*this)[num].matched) {
+					out = std::copy((*this)[num].first, (*this)[num].second, out);
+				}
+				p = q;
+				continue;
+			}
+
+			// Unknown $ sequence - output as-is
+			*out++ = *p++;
+			continue;
+		}
+
+		// Handle '\' escape sequences
+		if (*p == char_type('\\') && p + 1 != fmt_last) {
+			char_type next = *(p + 1);
+
+			// \\ -> literal backslash
+			if (next == char_type('\\')) {
+				*out++ = char_type('\\');
+				p += 2;
+				continue;
+			}
+
+			// \n -> newline
+			if (next == char_type('n')) {
+				*out++ = char_type('\n');
+				p += 2;
+				continue;
+			}
+
+			// \t -> tab
+			if (next == char_type('t')) {
+				*out++ = char_type('\t');
+				p += 2;
+				continue;
+			}
+
+			// \r -> carriage return
+			if (next == char_type('r')) {
+				*out++ = char_type('\r');
+				p += 2;
+				continue;
+			}
+
+			// Unknown escape - output as-is
+			*out++ = *p++;
+			continue;
+		}
+
+		// Regular character
+		*out++ = *p++;
+	}
+
+	return out;
 }
 
 ////////////////////////////////////////////

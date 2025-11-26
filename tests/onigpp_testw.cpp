@@ -348,7 +348,7 @@ void TestTokenizeTest() {
 
 	std::wstring html = L"<p><a href=\"http://google.com\">google</a> "
 	                    L"< a HREF =\"http://cppreference.com\">cppreference</a>\n</p>";
-	myns::wregex url_re(L"<\\s*A\\s+[^>]*href\\s*=\\s*\"([^\"]*)\"", myns::regex::icase);
+	myns::wregex url_re(std::wstring(L"<\\s*A\\s+[^>]*href\\s*=\\s*\"([^\"]*)\""), myns::regex::icase);
 	index = 0;
 	for (auto it = myns::wsregex_token_iterator(html.begin(), html.end(), url_re, 1),
 		      end = myns::wsregex_token_iterator(); it != end; ++it) {
