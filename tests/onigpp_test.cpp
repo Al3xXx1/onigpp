@@ -2,6 +2,7 @@
 // Author: katahiromz
 // License: BSD-2-Clause
 #include "tests.h"
+#include <iterator>
 
 // Using aliases defined in onigpp.h
 using sregex = myns::basic_regex<char>;
@@ -476,6 +477,25 @@ void TestPOSIXClasses() {
 	TEST_CASE_END("TestPOSIXClasses")
 }
 
+// -----------------------------------------------------------------
+// 8. Tokenizing Tests
+// -----------------------------------------------------------------
+
+void TestTokenizeTest() {
+	TEST_CASE("TestTokenizeTest")
+
+	std::string text = "Quick brown fox.";
+	// tokenization (non-matched fragments)
+	// Note that regex is matched only two times: when the third value is obtained
+	// the iterator is a suffix iterator.
+	myns::regex ws_re("\\s+"); // whitespace
+	std::copy(myns::sregex_token_iterator(text.begin(), text.end(), ws_re, -1),
+	          myns::sregex_token_iterator(),
+	          std::ostream_iterator<std::string>(std::cout, "\n"));
+
+	TEST_CASE_END("TestTokenizeTest")
+}
+
 // =================================================================
 // Main Function
 // =================================================================
@@ -498,6 +518,7 @@ int main() {
 	TestEncodingAndError();
 	TestSyntaxSelection();
 	TestPOSIXClasses();
+	TestTokenizeTest();
 
 	std::cout << "\n========================================================\n";
 	std::cout << "✨ All tests succeeded.\n";

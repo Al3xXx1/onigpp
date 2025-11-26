@@ -4,6 +4,7 @@
 #include "tests.h"
 #include <locale>
 #include <algorithm>
+#include <iterator>
 
 // Using aliases for wide-character types defined for onigpp
 using wregex = myns::basic_regex<wchar_t>;
@@ -318,6 +319,27 @@ void TestEncodingAndError() {
 	TEST_CASE_END(L"TestEncodingAndError")
 }
 
+// -----------------------------------------------------------------
+// 6. Tokenizing Tests
+// -----------------------------------------------------------------
+
+void TestTokenizeTest() {
+	TEST_CASE("TestTokenizeTest")
+
+	std::wstring text = L"Quick brown fox.";
+	// tokenization (non-matched fragments)
+	// Note that regex is matched only two times: when the third value is obtained
+	// the iterator is a suffix iterator.
+	myns::wregex ws_re(L"\\s+"); // whitespace
+
+	for (auto it = myns::wsregex_token_iterator(text.begin(), text.end(), ws_re, -1),
+		      end = myns::wsregex_token_iterator(); it != end; ++it) {
+		std::wcout << it->str() << L"\n";
+	}
+
+	TEST_CASE_END("TestTokenizeTest")
+}
+
 // =================================================================
 // Main
 // =================================================================
@@ -338,6 +360,7 @@ int main() {
 	TestReplacement();
 	TestSpecialReplacementPatterns();
 	TestEncodingAndError();
+	TestTokenizeTest();
 
 	std::wcout << L"\n========================================================\n";
 	std::wcout << L"✨ All wide-character tests succeeded.\n";
