@@ -168,7 +168,7 @@ void test_optional_patterns() {
 	{
 		myns::regex re("a?");
 		auto results = collect_matches("ba", re);
-		// At pos 0: "" (no 'a'), at pos 1: "a", at pos 2: ""
+		// At pos 0: "" (no 'a' at start), at pos 1: "a", at pos 2: "" (end of string)
 		std::vector<std::pair<int, int>> expected = {{0, 0}, {1, 1}, {2, 0}};
 		compare_results("a?", "ba", expected, results);
 	}

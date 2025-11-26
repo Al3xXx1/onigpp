@@ -155,10 +155,9 @@ void test_empty_range() {
 		std::string input = "";
 		myns::smatch m;
 
-		// regex_search on empty range
+		// regex_search on empty range - result not checked, testing that no exception is thrown
 		bool found_search = myns::regex_search(input, m, re);
-		// Empty pattern can match empty string
-		(void)found_search;
+		(void)found_search;  // Result varies by pattern; we're only testing no exception
 
 		// regex_match on empty range
 		myns::regex re_empty("");
@@ -222,10 +221,11 @@ void test_comparison_with_std_exceptions() {
 		}
 
 		if (std_threw != onigpp_threw) {
-			std::cout << "  Pattern: \"" << pattern << "\"" << std::endl;
+			std::cout << "  WARNING: Pattern: \"" << pattern << "\"" << std::endl;
 			std::cout << "  std threw: " << (std_threw ? "YES" : "NO")
 			          << ", onigpp threw: " << (onigpp_threw ? "YES" : "NO") << std::endl;
 			// Note: We don't fail on this since some patterns have implementation-specific behavior
+			// This is logged as a warning for visibility
 			return false;
 		}
 		return true;
