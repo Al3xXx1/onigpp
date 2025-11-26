@@ -641,21 +641,19 @@ The following references are available only when the `oniguruma` flag is specifi
 
 ### Examples
 
-> **Note:** In C++ string literals, backslashes must be escaped (e.g., `"\\w"` represents the regex `\w`).
-
 ```cpp
 // Standard $1, $2 references
-regex re("(\\w+):(\\w+)");
+regex re(R"((\w+):(\w+))");
 string result = regex_replace("key:value", re, "$2=$1");
 // result: "value=key"
 
 // Entire match with $&
-regex re2("\\w+");
+regex re2(R"(\w+)");
 string result2 = regex_replace("hello world", re2, "[$&]");
 // result2: "[hello] [world]"
 
 // Named reference with Oniguruma flag
-regex re3("(?<word>\\w+)", regex::oniguruma);
+regex re3(R"((?<word>\w+))", regex::oniguruma);
 string result3 = regex_replace("hello", re3, "${word}!");
 // result3: "hello!"
 ```
