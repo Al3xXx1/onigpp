@@ -111,13 +111,15 @@ int main() {
 		std::cout << "✅ wsmatch test passed\n";
 	}
 
-	// Test 8: Verify ready() is noexcept
+	// Test 8: Verify ready() is noexcept (onigpp-specific, std::match_results::ready() is not noexcept)
+	#ifndef USE_STD_FOR_TESTS
 	{
 		myns::smatch m;
 		static_assert(noexcept(m.ready()), "ready() must be noexcept");
 		std::cout << "  ready() is noexcept ✓\n";
 		std::cout << "✅ noexcept test passed\n";
 	}
+	#endif
 
 	// Test 9: Test that empty() and ready() have different semantics
 	{
