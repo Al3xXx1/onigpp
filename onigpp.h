@@ -800,7 +800,8 @@ private:
 	bool isctype_wchar_impl(char_type c, char_class_type f, std::false_type) const {
 		// Basic ASCII character class support for char16_t and char32_t
 		// This is a portable fallback when no ctype facet is available
-		std::ctype_base::mask mask = static_cast<std::ctype_base::mask>(f);
+		// Strip the _word_class_flag before casting to ctype_base::mask
+		std::ctype_base::mask mask = static_cast<std::ctype_base::mask>(f & ~_word_class_flag);
 
 		// Helper lambdas for character classification
 		auto is_alpha = [](char_type ch) {
@@ -846,7 +847,7 @@ private:
 		};
 
 		// Check each character class - the mask may contain multiple classes
-		// A character matches if it belongs to ALL the classes specified in the mask
+		// A character matches if it belongs to ANY of the classes specified in the mask
 
 		// For standard ctype masks, check if c is a member of the requested class
 		// alnum = alpha | digit, so check for exact mask matches first

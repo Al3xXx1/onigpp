@@ -335,8 +335,8 @@ int main() {
 		auto lower_icase = traits.lookup_classname(lower, lower + 5, true);
 		auto upper_icase = traits.lookup_classname(upper, upper + 5, true);
 		// With icase, both should return alpha (matching both cases)
-		assert(lower_icase == static_cast<int>(std::ctype_base::alpha));
-		assert(upper_icase == static_cast<int>(std::ctype_base::alpha));
+		assert(lower_icase == std::ctype_base::alpha);
+		assert(upper_icase == std::ctype_base::alpha);
 		
 		std::cout << "lookup_classname works correctly\n";
 	TEST_CASE_END("lookup_classname")
