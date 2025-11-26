@@ -661,5 +661,3 @@ string result3 = regex_replace("hello", re3, "${word}!");
 ## See also
 
 - [Unicode Standard Annex #29 - Unicode Text Segmentation](http://unicode.org/reports/tr29/)
-- [RE.txt](RE.txt) - Original English plaintext reference (authoritative source)
-- [RE_ja.txt](RE_ja.txt) - Japanese plaintext reference (authoritative source)
