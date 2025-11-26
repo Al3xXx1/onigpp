@@ -1,9 +1,16 @@
 // match_results_format_test.cpp --- Tests for match_results::format
 // Author: katahiromz
 // License: BSD-2-Clause
+//
+// Note: This test file tests onigpp::match_results::format, which is
+// an onigpp-specific implementation. When USE_STD_FOR_TESTS is defined,
+// the tests are skipped as std::match_results::format has different behavior.
+
 #include "tests.h"
 #include <iterator>
 #include <sstream>
+
+#ifndef USE_STD_FOR_TESTS
 
 // Helper to print test case start and result
 #define TEST_CASE(name) \
@@ -139,10 +146,8 @@ void TestLiteralDollarReplacement() {
 
 // -----------------------------------------------------------------
 // 5. Escape sequences (\n, \t, \r, \\)
-// Note: Escape sequence processing is onigpp-specific, not available in std::regex
 // -----------------------------------------------------------------
 
-#ifndef USE_STD_FOR_TESTS
 void TestEscapeSequences() {
 	TEST_CASE("TestEscapeSequences")
 
@@ -174,7 +179,6 @@ void TestEscapeSequences() {
 
 	TEST_CASE_END("TestEscapeSequences")
 }
-#endif
 
 // -----------------------------------------------------------------
 // 6. Unmatched submatches (replaced with empty string)
@@ -299,31 +303,7 @@ void TestCStringFormat() {
 }
 
 // -----------------------------------------------------------------
-// 10. format_literal flag test
-// -----------------------------------------------------------------
-
-#ifndef USE_STD_FOR_TESTS
-// format_literal is onigpp-specific, not available in std::regex
-void TestFormatLiteralFlag() {
-	TEST_CASE("TestFormatLiteralFlag")
-
-	std::string text = "Hello World";
-	myns::regex re("(\\w+)\\s+(\\w+)");
-	myns::smatch m;
-
-	assert(myns::regex_search(text, m, re));
-
-	// With format_literal, $1 should NOT be replaced
-	std::string result = m.format("$1 $2", myns::regex_constants::format_literal);
-	std::cout << "  format_literal: " << result << std::endl;
-	assert(result == "$1 $2");
-
-	TEST_CASE_END("TestFormatLiteralFlag")
-}
-#endif
-
-// -----------------------------------------------------------------
-// 11. Wide string support test
+// 10. Wide string support test
 // -----------------------------------------------------------------
 
 void TestWideStringFormat() {
@@ -342,6 +322,8 @@ void TestWideStringFormat() {
 	TEST_CASE_END("TestWideStringFormat")
 }
 
+#endif // !USE_STD_FOR_TESTS
+
 // =================================================================
 // Main Function
 // =================================================================
@@ -349,6 +331,7 @@ void TestWideStringFormat() {
 int main() {
 	TESTS_OUTPUT_INIT();
 
+#ifndef USE_STD_FOR_TESTS
 	// Oniguruma initialization (no-op for std::regex)
 	ONIGPP_TEST_INIT;
 
@@ -360,21 +343,27 @@ int main() {
 	TestFullMatchReplacement();
 	TestPrefixSuffixReplacement();
 	TestLiteralDollarReplacement();
-#ifndef USE_STD_FOR_TESTS
 	TestEscapeSequences();
-#endif
 	TestUnmatchedSubmatches();
 	TestFullPartialMatchScenarios();
 	TestOutputIteratorFormat();
 	TestCStringFormat();
-#ifndef USE_STD_FOR_TESTS
-	TestFormatLiteralFlag();
-#endif
 	TestWideStringFormat();
 
 	std::cout << "\n========================================================\n";
 	std::cout << "✨ All match_results::format tests succeeded.\n";
 	std::cout << "========================================================\n";
+#else
+	std::cout << "========================================================\n";
+	std::cout << " match_results::format Test Suite\n";
+	std::cout << "========================================================\n";
+	std::cout << "\n  Skipping tests: match_results::format is onigpp-specific.\n";
+	std::cout << "  When USE_STD_FOR_TESTS is defined, std::match_results::format\n";
+	std::cout << "  is used, which has different behavior.\n";
+	std::cout << "\n========================================================\n";
+	std::cout << "✨ Test skipped (USE_STD_FOR_TESTS mode).\n";
+	std::cout << "========================================================\n";
+#endif
 
 	return 0;
 }

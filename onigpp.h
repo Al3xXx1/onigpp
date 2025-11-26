@@ -139,15 +139,14 @@ namespace regex_constants {
 	// Format control flags for replacement
 	static constexpr match_flag_type format_first_only = (1 << 8);
 	static constexpr match_flag_type format_no_copy = (1 << 9);
-	static constexpr match_flag_type format_literal = (1 << 10);
 
 	// Additional std::regex compatibility flags for word boundaries and continuous matching
 	// match_not_bow: First position is not treated as beginning-of-word (affects \b word boundary)
 	// match_not_eow: Last position is not treated as end-of-word (affects \b word boundary)
 	// match_continuous: Match must start exactly at the search start position (like \G anchor)
-	static constexpr match_flag_type match_not_bow = (1 << 11); // std::regex_constants::match_not_bow
-	static constexpr match_flag_type match_not_eow = (1 << 12); // std::regex_constants::match_not_eow
-	static constexpr match_flag_type match_continuous = (1 << 13); // std::regex_constants::match_continuous
+	static constexpr match_flag_type match_not_bow = (1 << 10); // std::regex_constants::match_not_bow
+	static constexpr match_flag_type match_not_eow = (1 << 11); // std::regex_constants::match_not_eow
+	static constexpr match_flag_type match_continuous = (1 << 12); // std::regex_constants::match_continuous
 
 	// Default values
 	// Note: In std::regex, ECMAScript is the default grammar when no flags are specified
@@ -854,10 +853,7 @@ OutputIt match_results<BidirIt, Alloc>::format(
 	const char_type* fmt_last,
 	regex_constants::match_flag_type flags) const
 {
-	// Handle format_literal flag - output format string as-is
-	if (flags & regex_constants::format_literal) {
-		return std::copy(fmt_first, fmt_last, out);
-	}
+	(void)flags; // Currently unused, reserved for future use
 
 	const char_type* p = fmt_first;
 	while (p != fmt_last) {
