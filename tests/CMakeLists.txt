@@ -109,6 +109,11 @@ add_executable(empty_pattern_test empty_pattern_test.cpp)
 target_include_directories(empty_pattern_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(empty_pattern_test PRIVATE onigpp)
 
+# oniguruma_flag_test.exe
+add_executable(oniguruma_flag_test oniguruma_flag_test.cpp)
+target_include_directories(oniguruma_flag_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(oniguruma_flag_test PRIVATE onigpp)
+
 # compat tests subdirectory
 add_subdirectory(compat)
 
@@ -202,4 +207,8 @@ add_test(
 add_test(
 	NAME test22
 	COMMAND $<TARGET_FILE:empty_pattern_test>
+	WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
+add_test(
+	NAME test23
+	COMMAND $<TARGET_FILE:oniguruma_flag_test>
 	WORKING_DIRECTORY ${PROJECT_BINARY_DIR})

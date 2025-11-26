@@ -629,6 +629,7 @@ OnigOptionType basic_regex<CharT, Traits>::_options_from_flags(flag_type f) {
 	bool multiline = !!(f & regex_constants::multiline);
 	bool extended = !!(f & regex_constants::extended);
 	bool ecmascript = !!(f & regex_constants::ECMAScript);
+	bool native_oniguruma = !!(f & regex_constants::oniguruma);
 
 	// Note: New std::regex compatible flags are handled as follows:
 	// - nosubs: handled at match/search time by not populating match_results
@@ -639,8 +640,13 @@ OnigOptionType basic_regex<CharT, Traits>::_options_from_flags(flag_type f) {
 	OnigOptionType options = 0;
 	options |= (icase ? ONIG_OPTION_IGNORECASE : 0);
 
-	// ECMAScript mode: handle dot and anchor behavior separately
-	if (ecmascript) {
+	// When oniguruma flag is set, use native Oniguruma behavior
+	// (bypasses ECMAScript-specific option settings)
+	if (native_oniguruma) {
+		// Native Oniguruma mode: use standard Oniguruma option handling
+		options |= (multiline ? (ONIG_OPTION_MULTILINE | ONIG_OPTION_NEGATE_SINGLELINE) : ONIG_OPTION_SINGLELINE);
+	} else if (ecmascript) {
+		// ECMAScript mode: handle dot and anchor behavior separately
 		// In ECMAScript:
 		// - By default, dot does NOT match newline (use SINGLELINE option)
 		// - When multiline flag is set, we use pattern transformation to emulate
@@ -665,7 +671,10 @@ OnigSyntaxType* basic_regex<CharT, Traits>::_syntax_from_flags(flag_type f) {
 	// If multiple grammar flags are set, the priority ensures stable, deterministic selection.
 	// Note: regex_constants::extended serves dual purpose - both POSIX extended grammar
 	// and free-spacing option (ONIG_OPTION_EXTEND), which is compatible with std::regex semantics.
-	if (f & regex_constants::basic)
+	// Note: oniguruma flag has highest priority - when set, use native Oniguruma syntax
+	if (f & regex_constants::oniguruma)
+		return ONIG_SYNTAX_ONIGURUMA; // Use native Oniguruma syntax
+	else if (f & regex_constants::basic)
 		return ONIG_SYNTAX_POSIX_BASIC;
 	else if (f & regex_constants::extended)
 		return ONIG_SYNTAX_POSIX_EXTENDED;
@@ -695,8 +704,9 @@ basic_regex<CharT, Traits>::basic_regex(const CharT* s, size_type count, flag_ty
 	m_encoding = enc;
 
 	// Preprocess pattern for ECMAScript compatibility if needed
+	// Skip preprocessing when oniguruma flag is set - use native Oniguruma syntax
 	string_type compiled_pattern = m_pattern;
-	if (f & regex_constants::ECMAScript) {
+	if ((f & regex_constants::ECMAScript) && !(f & regex_constants::oniguruma)) {
 		compiled_pattern = _preprocess_pattern_for_ecmascript(compiled_pattern);
 	}
 
@@ -724,8 +734,9 @@ basic_regex<CharT, Traits>::basic_regex(const self_type& other)
 	OnigErrorInfo err_info;
 
 	// Preprocess pattern for ECMAScript compatibility if needed
+	// Skip preprocessing when oniguruma flag is set - use native Oniguruma syntax
 	string_type compiled_pattern = m_pattern;
-	if (m_flags & regex_constants::ECMAScript) {
+	if ((m_flags & regex_constants::ECMAScript) && !(m_flags & regex_constants::oniguruma)) {
 		compiled_pattern = _preprocess_pattern_for_ecmascript(compiled_pattern);
 	}
 
@@ -1251,8 +1262,9 @@ basic_regex<CharT, Traits>::imbue(locale_type loc) {
 		}
 
 		// Preprocess pattern for ECMAScript compatibility if needed
+		// Skip preprocessing when oniguruma flag is set - use native Oniguruma syntax
 		string_type compiled_pattern = m_pattern;
-		if (m_flags & regex_constants::ECMAScript) {
+		if ((m_flags & regex_constants::ECMAScript) && !(m_flags & regex_constants::oniguruma)) {
 			compiled_pattern = _preprocess_pattern_for_ecmascript(compiled_pattern);
 		}
 
