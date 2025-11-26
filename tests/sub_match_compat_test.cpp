@@ -466,9 +466,8 @@ void TestComparisonWithRegexResults() {
 	assert(m[2] == "quick");
 	assert(m[3] == "brown");
 	
-	assert(m[1] < m[2]);    // "The" < "quick" (uppercase T < lowercase q in ASCII)
-	
-	// "brown" < "quick" alphabetically
+	// String comparison follows std::basic_string::compare semantics
+	assert(m[1] < m[2]);    // "The" < "quick"
 	assert(m[3] < m[2]);    // "brown" < "quick"
 	
 	// Test compare method

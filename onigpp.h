@@ -436,9 +436,9 @@ bool operator>=(const typename std::iterator_traits<BidirIt>::value_type* lhs,
 }
 
 // Stream output operator for sub_match
-template <class CharT, class ST, class BidirIt>
-std::basic_ostream<CharT, ST>&
-operator<<(std::basic_ostream<CharT, ST>& os, const sub_match<BidirIt>& m) {
+template <class CharT, class Traits, class BidirIt>
+std::basic_ostream<CharT, Traits>&
+operator<<(std::basic_ostream<CharT, Traits>& os, const sub_match<BidirIt>& m) {
 	return os << m.str();
 }
 
