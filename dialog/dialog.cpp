@@ -72,9 +72,6 @@ string_type mstr_unescape(const string_type& input) {
 					}
 					if (!hex.empty() && hex.size() == 4) {
 						unsigned long value = _tcstoul(hex.c_str(), nullptr, 16);
-						WCHAR sz[32];
-						wsprintfW(sz, L"%04X", char_type(value));
-						MessageBoxW(NULL, sz, NULL, 0);
 						output += char_type(value);
 					} else {
 						// 無効な値はそのまま出力

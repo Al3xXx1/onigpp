@@ -86,8 +86,7 @@ add_subdirectory(tests)
 
 # dialog
 if(WIN32)
-	add_subdirectory(wdialog)
-	add_subdirectory(u8dialog)
+	add_subdirectory(dialog)
 endif()
 
 # CTest tests
