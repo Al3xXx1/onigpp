@@ -312,6 +312,20 @@ int main() {
 		assert(traits.isctype('A', upper_class) == true);
 		assert(traits.isctype('a', lower_class) == true);
 		
+		// Test word class 'w' which should match alnum and underscore
+		const char* word = "w";
+		auto word_class = traits.lookup_classname(word, word + 1);
+		assert(word_class != 0);
+		// Test that word class matches alphanumeric characters
+		assert(traits.isctype('a', word_class) == true);
+		assert(traits.isctype('A', word_class) == true);
+		assert(traits.isctype('5', word_class) == true);
+		// Test that word class matches underscore (the key feature)
+		assert(traits.isctype('_', word_class) == true);
+		// Test that word class doesn't match non-word characters
+		assert(traits.isctype(' ', word_class) == false);
+		assert(traits.isctype('-', word_class) == false);
+		
 		// Test unknown class returns 0
 		const char* unknown = "unknown_class";
 		auto unknown_class = traits.lookup_classname(unknown, unknown + 13);
@@ -327,7 +341,7 @@ int main() {
 		std::cout << "lookup_classname works correctly\n";
 	TEST_CASE_END("lookup_classname")
 
-#ifndef USE_STD_FOR_TESTS // char16_t/char32_t translate_nocase is onigpp-specific
+#ifndef USE_STD_FOR_TESTS // char16_t/char32_t tests are onigpp-specific
 	// Test 14: char16_t and char32_t translate_nocase
 	TEST_CASE("char16_t and char32_t translate_nocase")
 		myns::regex_traits<char16_t> u16traits;
@@ -345,6 +359,49 @@ int main() {
 		
 		std::cout << "char16_t and char32_t translate_nocase work correctly\n";
 	TEST_CASE_END("char16_t and char32_t translate_nocase")
+
+	// Test 15: char16_t and char32_t isctype with lookup_classname
+	TEST_CASE("char16_t and char32_t isctype with lookup_classname")
+		myns::regex_traits<char16_t> u16traits;
+		myns::regex_traits<char32_t> u32traits;
+		
+		// Test char16_t lookup_classname and isctype
+		const char16_t* u16_digit = u"digit";
+		const char16_t* u16_alpha = u"alpha";
+		const char16_t* u16_space = u"space";
+		const char16_t* u16_word = u"w";
+		
+		auto u16_digit_class = u16traits.lookup_classname(u16_digit, u16_digit + 5);
+		auto u16_alpha_class = u16traits.lookup_classname(u16_alpha, u16_alpha + 5);
+		auto u16_space_class = u16traits.lookup_classname(u16_space, u16_space + 5);
+		auto u16_word_class = u16traits.lookup_classname(u16_word, u16_word + 1);
+		
+		// Test isctype for char16_t
+		assert(u16traits.isctype(u'5', u16_digit_class) == true);
+		assert(u16traits.isctype(u'a', u16_digit_class) == false);
+		assert(u16traits.isctype(u'a', u16_alpha_class) == true);
+		assert(u16traits.isctype(u'5', u16_alpha_class) == false);
+		assert(u16traits.isctype(u' ', u16_space_class) == true);
+		assert(u16traits.isctype(u'_', u16_word_class) == true);
+		assert(u16traits.isctype(u'a', u16_word_class) == true);
+		
+		// Test char32_t lookup_classname and isctype
+		const char32_t* u32_digit = U"digit";
+		const char32_t* u32_alpha = U"alpha";
+		const char32_t* u32_word = U"w";
+		
+		auto u32_digit_class = u32traits.lookup_classname(u32_digit, u32_digit + 5);
+		auto u32_alpha_class = u32traits.lookup_classname(u32_alpha, u32_alpha + 5);
+		auto u32_word_class = u32traits.lookup_classname(u32_word, u32_word + 1);
+		
+		// Test isctype for char32_t
+		assert(u32traits.isctype(U'5', u32_digit_class) == true);
+		assert(u32traits.isctype(U'a', u32_digit_class) == false);
+		assert(u32traits.isctype(U'a', u32_alpha_class) == true);
+		assert(u32traits.isctype(U'_', u32_word_class) == true);
+		
+		std::cout << "char16_t and char32_t isctype with lookup_classname work correctly\n";
+	TEST_CASE_END("char16_t and char32_t isctype with lookup_classname")
 #endif
 
 	std::cout << "\n=== All regex_traits Tests Passed ===\n";

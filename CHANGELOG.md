@@ -7,8 +7,10 @@
   - `transform_primary(const char_type*, const char_type*)`: Returns a primary collation key (case-insensitive) for sorting.
   - `lookup_classname(const char_type*, const char_type*, bool icase = false)`: Looks up POSIX character class names and returns a `char_class_type` bitmask.
     - Supports: alnum, alpha, blank, cntrl, digit, graph, lower, print, punct, space, upper, xdigit, d, w, s
+    - The 'w' class (word characters) correctly matches alphanumeric characters AND underscore.
     - When `icase=true`, lower/upper classes return alpha to match both cases.
   - All new methods work with char, wchar_t, char16_t, and char32_t types.
+  - `isctype` for char16_t and char32_t now provides full ASCII character class support instead of returning false.
   - Added comprehensive tests in `regex_traits_test.cpp`.
 - Refactored `regex_replace` to use `match_results::format` for replacement string processing:
   - Separated responsibilities: `regex_replace` handles matching iteration, `match_results::format` handles format expansion.

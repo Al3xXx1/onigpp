@@ -462,6 +462,10 @@ public:
 	using locale_type = std::locale;
 	using char_class_type = int;
 
+	// Special bit flag for word character class (alnum + underscore)
+	// Uses a high bit that won't conflict with ctype_base::mask values
+	static const char_class_type _word_class_flag = (1 << 16);
+
 	// Constructors
 	regex_traits() : m_locale() {}
 	explicit regex_traits(const locale_type& loc) : m_locale(loc) {}
@@ -511,7 +515,16 @@ public:
 	}
 
 	// Check if character is of a specific character class
+	// Handles both standard ctype_base masks and our special _word_class_flag
 	bool isctype(char_type c, char_class_type f) const {
+		// Check for underscore if word class flag is set
+		if ((f & _word_class_flag) != 0) {
+			if (c == static_cast<char_type>('_')) {
+				return true;
+			}
+			// Remove the flag before checking with ctype facet
+			f &= ~_word_class_flag;
+		}
 		// Use the locale's ctype facet for char and wchar_t
 		// For char16_t and char32_t, provide basic fallback
 		return isctype_impl(c, f, typename std::is_same<char_type, char>::type());
@@ -609,8 +622,8 @@ public:
 			result = std::ctype_base::xdigit;
 		} else if (name == "w") {
 			// \w matches [a-zA-Z0-9_] - word characters
-			// Use alnum as the base, _ is checked separately in isctype
-			result = std::ctype_base::alnum;
+			// Use alnum combined with our special _word_class_flag to indicate underscore handling
+			result = std::ctype_base::alnum | _word_class_flag;
 		}
 
 		// For case-insensitive matching, if the class is lower or upper,
@@ -783,11 +796,138 @@ private:
 	}
 
 	// isctype implementation for char16_t and char32_t
+	// Provides basic ASCII character class support
 	bool isctype_wchar_impl(char_type c, char_class_type f, std::false_type) const {
-		// Basic fallback for char16_t and char32_t
-		(void)c;
-		(void)f;
-		return false;
+		// Basic ASCII character class support for char16_t and char32_t
+		// This is a portable fallback when no ctype facet is available
+		std::ctype_base::mask mask = static_cast<std::ctype_base::mask>(f);
+
+		// Helper lambdas for character classification
+		auto is_alpha = [](char_type ch) {
+			return (ch >= static_cast<char_type>('a') && ch <= static_cast<char_type>('z')) ||
+			       (ch >= static_cast<char_type>('A') && ch <= static_cast<char_type>('Z'));
+		};
+		auto is_digit = [](char_type ch) {
+			return ch >= static_cast<char_type>('0') && ch <= static_cast<char_type>('9');
+		};
+		auto is_upper = [](char_type ch) {
+			return ch >= static_cast<char_type>('A') && ch <= static_cast<char_type>('Z');
+		};
+		auto is_lower = [](char_type ch) {
+			return ch >= static_cast<char_type>('a') && ch <= static_cast<char_type>('z');
+		};
+		auto is_space = [](char_type ch) {
+			return ch == static_cast<char_type>(' ') || ch == static_cast<char_type>('\t') ||
+			       ch == static_cast<char_type>('\n') || ch == static_cast<char_type>('\r') ||
+			       ch == static_cast<char_type>('\v') || ch == static_cast<char_type>('\f');
+		};
+		auto is_xdigit = [is_digit](char_type ch) {
+			return is_digit(ch) ||
+			       (ch >= static_cast<char_type>('a') && ch <= static_cast<char_type>('f')) ||
+			       (ch >= static_cast<char_type>('A') && ch <= static_cast<char_type>('F'));
+		};
+		auto is_punct = [](char_type ch) {
+			return (ch >= static_cast<char_type>('!') && ch <= static_cast<char_type>('/')) ||
+			       (ch >= static_cast<char_type>(':') && ch <= static_cast<char_type>('@')) ||
+			       (ch >= static_cast<char_type>('[') && ch <= static_cast<char_type>('`')) ||
+			       (ch >= static_cast<char_type>('{') && ch <= static_cast<char_type>('~'));
+		};
+		auto is_cntrl = [](char_type ch) {
+			return ch < static_cast<char_type>(32) || ch == static_cast<char_type>(127);
+		};
+		auto is_print = [](char_type ch) {
+			return ch >= static_cast<char_type>(32) && ch <= static_cast<char_type>(126);
+		};
+		auto is_graph = [](char_type ch) {
+			return ch > static_cast<char_type>(32) && ch <= static_cast<char_type>(126);
+		};
+		auto is_blank = [](char_type ch) {
+			return ch == static_cast<char_type>(' ') || ch == static_cast<char_type>('\t');
+		};
+
+		// Check each character class - the mask may contain multiple classes
+		// A character matches if it belongs to ALL the classes specified in the mask
+
+		// For standard ctype masks, check if c is a member of the requested class
+		// alnum = alpha | digit, so check for exact mask matches first
+
+		// Check for alnum (both alpha and digit together)
+		if (mask == std::ctype_base::alnum) {
+			return is_alpha(c) || is_digit(c);
+		}
+
+		// Check for individual classes
+		if (mask == std::ctype_base::digit) {
+			return is_digit(c);
+		}
+		if (mask == std::ctype_base::alpha) {
+			return is_alpha(c);
+		}
+		if (mask == std::ctype_base::upper) {
+			return is_upper(c);
+		}
+		if (mask == std::ctype_base::lower) {
+			return is_lower(c);
+		}
+		if (mask == std::ctype_base::space) {
+			return is_space(c);
+		}
+		if (mask == std::ctype_base::xdigit) {
+			return is_xdigit(c);
+		}
+		if (mask == std::ctype_base::punct) {
+			return is_punct(c);
+		}
+		if (mask == std::ctype_base::cntrl) {
+			return is_cntrl(c);
+		}
+		if (mask == std::ctype_base::print) {
+			return is_print(c);
+		}
+		if (mask == std::ctype_base::graph) {
+			return is_graph(c);
+		}
+		if (mask == std::ctype_base::blank) {
+			return is_blank(c);
+		}
+
+		// For composite masks, check if the character matches any of the classes
+		bool matches = false;
+		if ((mask & std::ctype_base::digit) == std::ctype_base::digit) {
+			if (is_digit(c)) matches = true;
+		}
+		if ((mask & std::ctype_base::alpha) == std::ctype_base::alpha) {
+			if (is_alpha(c)) matches = true;
+		}
+		if ((mask & std::ctype_base::upper) == std::ctype_base::upper) {
+			if (is_upper(c)) matches = true;
+		}
+		if ((mask & std::ctype_base::lower) == std::ctype_base::lower) {
+			if (is_lower(c)) matches = true;
+		}
+		if ((mask & std::ctype_base::space) == std::ctype_base::space) {
+			if (is_space(c)) matches = true;
+		}
+		if ((mask & std::ctype_base::xdigit) == std::ctype_base::xdigit) {
+			if (is_xdigit(c)) matches = true;
+		}
+		if ((mask & std::ctype_base::punct) == std::ctype_base::punct) {
+			if (is_punct(c)) matches = true;
+		}
+		if ((mask & std::ctype_base::cntrl) == std::ctype_base::cntrl) {
+			if (is_cntrl(c)) matches = true;
+		}
+		if ((mask & std::ctype_base::print) == std::ctype_base::print) {
+			if (is_print(c)) matches = true;
+		}
+		if ((mask & std::ctype_base::graph) == std::ctype_base::graph) {
+			if (is_graph(c)) matches = true;
+		}
+		if ((mask & std::ctype_base::blank) == std::ctype_base::blank) {
+			if (is_blank(c)) matches = true;
+		}
+
+		return matches;
 	}
 };
 
