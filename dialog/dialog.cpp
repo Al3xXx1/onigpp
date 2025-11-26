@@ -217,7 +217,7 @@ bool do_find(const string_type& input, DWORD& iStart, DWORD& iEnd, regex_type& r
 }
 
 void OnFindReplace(HWND hwnd, int action) {
-	BOOL unescape = IsDlgButtonChecked(hwnd, chx1) == BST_CHECKED;
+	BOOL ecma = IsDlgButtonChecked(hwnd, chx1) == BST_CHECKED;
 	BOOL oniguruma = IsDlgButtonChecked(hwnd, chx2) == BST_CHECKED;
 	BOOL icase = IsDlgButtonChecked(hwnd, chx3) == BST_CHECKED;
 	BOOL multiline = IsDlgButtonChecked(hwnd, chx4) == BST_CHECKED;
@@ -231,7 +231,7 @@ void OnFindReplace(HWND hwnd, int action) {
 	string_type replacement = replacement_text;
 
 	int flags = 0;
-	if (unescape) replacement = mstr_unescape(replacement);
+	if (ecma) flags |= rex::regex::ECMAScript;
 	if (oniguruma) flags |= rex::regex::oniguruma;
 	if (icase) flags |= rex::regex::icase;
 	if (multiline) flags |= rex::regex::multiline;
@@ -346,6 +346,7 @@ void OnFindReplace(HWND hwnd, int action) {
 
 // WM_INITDIALOG
 BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam) {
+	CheckDlgButton(hwnd, chx1, BST_CHECKED); // ECMAScript
 	SetDlgItemText(hwnd, edt1, TEXT("This is a test.\r\n\r\nThis is a test.\r\n"));
 	return TRUE;
 }
