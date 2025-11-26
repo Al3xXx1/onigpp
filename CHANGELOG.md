@@ -2,6 +2,15 @@
 
 ## 2025-XX-YY Ver.6.9.15
 
+- Enhanced `sub_match` class for full `std::sub_match` compatibility:
+  - Added `compare()` member function for comparing with other `sub_match`, `string_type`, and C-strings.
+  - Added comparison operators (`==`, `!=`, `<`, `<=`, `>`, `>=`) for:
+    - `sub_match` vs `sub_match`
+    - `sub_match` vs `string_type` (and vice versa)
+    - `sub_match` vs `const value_type*` C-strings (and vice versa)
+  - Added stream output operator (`operator<<`) for inserting `sub_match` contents to `std::basic_ostream`.
+  - All comparison operations use `str()` semantics: unmatched sub_matches compare as empty strings.
+  - Added comprehensive test suite in `sub_match_compat_test.cpp` for new functionality.
 - Added `match_results::ready()` member function to check if match results have been populated.
   - Returns `true` after a successful or unsuccessful `regex_match` or `regex_search` operation.
   - Returns `false` for default-constructed `match_results`.

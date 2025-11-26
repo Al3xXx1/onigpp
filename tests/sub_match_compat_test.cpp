@@ -2,6 +2,7 @@
 // Author: katahiromz
 // License: BSD-2-Clause
 #include "tests.h"
+#include <sstream>
 
 // =================================================================
 // Helper Functions
@@ -215,6 +216,273 @@ void TestIntegrationWithRegex() {
 }
 
 // -----------------------------------------------------------------
+// 6. Test compare() method
+// -----------------------------------------------------------------
+
+void TestCompareMethod() {
+	TEST_CASE("TestCompareMethod")
+
+	const char* str1 = "abc";
+	const char* str2 = "abd";
+	const char* str3 = "abc";
+
+	myns::csub_match sm1;
+	sm1.first = str1;
+	sm1.second = str1 + 3; // "abc"
+	sm1.matched = true;
+
+	myns::csub_match sm2;
+	sm2.first = str2;
+	sm2.second = str2 + 3; // "abd"
+	sm2.matched = true;
+
+	myns::csub_match sm3;
+	sm3.first = str3;
+	sm3.second = str3 + 3; // "abc"
+	sm3.matched = true;
+
+	// Test compare with another sub_match
+	assert(sm1.compare(sm3) == 0);  // "abc" == "abc"
+	assert(sm1.compare(sm2) < 0);   // "abc" < "abd"
+	assert(sm2.compare(sm1) > 0);   // "abd" > "abc"
+	
+	// Test compare with string_type
+	std::string s_abc = "abc";
+	std::string s_abd = "abd";
+	assert(sm1.compare(s_abc) == 0);
+	assert(sm1.compare(s_abd) < 0);
+	
+	// Test compare with C-string
+	assert(sm1.compare("abc") == 0);
+	assert(sm1.compare("abd") < 0);
+	assert(sm1.compare("abb") > 0);
+	
+	// Test unmatched sub_match (should compare as empty string)
+	myns::csub_match sm_unmatched;
+	sm_unmatched.first = str1;
+	sm_unmatched.second = str1 + 3;
+	sm_unmatched.matched = false;
+	assert(sm_unmatched.compare("") == 0);
+	assert(sm_unmatched.compare("a") < 0);
+
+	TEST_CASE_END("TestCompareMethod")
+}
+
+// -----------------------------------------------------------------
+// 7. Test comparison operators between sub_match objects
+// -----------------------------------------------------------------
+
+void TestSubMatchComparisonOperators() {
+	TEST_CASE("TestSubMatchComparisonOperators")
+
+	const char* str1 = "apple";
+	const char* str2 = "banana";
+	const char* str3 = "apple";
+
+	myns::csub_match sm1;
+	sm1.first = str1;
+	sm1.second = str1 + 5; // "apple"
+	sm1.matched = true;
+
+	myns::csub_match sm2;
+	sm2.first = str2;
+	sm2.second = str2 + 6; // "banana"
+	sm2.matched = true;
+
+	myns::csub_match sm3;
+	sm3.first = str3;
+	sm3.second = str3 + 5; // "apple"
+	sm3.matched = true;
+
+	// Test equality operators
+	assert(sm1 == sm3);
+	assert(!(sm1 == sm2));
+	assert(sm1 != sm2);
+	assert(!(sm1 != sm3));
+	
+	// Test ordering operators
+	assert(sm1 < sm2);      // "apple" < "banana"
+	assert(!(sm2 < sm1));
+	assert(!(sm1 < sm3));   // "apple" is not less than "apple"
+	
+	assert(sm1 <= sm2);
+	assert(sm1 <= sm3);
+	assert(!(sm2 <= sm1));
+	
+	assert(sm2 > sm1);      // "banana" > "apple"
+	assert(!(sm1 > sm2));
+	assert(!(sm1 > sm3));
+	
+	assert(sm2 >= sm1);
+	assert(sm1 >= sm3);
+	assert(!(sm1 >= sm2));
+
+	TEST_CASE_END("TestSubMatchComparisonOperators")
+}
+
+// -----------------------------------------------------------------
+// 8. Test comparison operators between sub_match and string_type
+// -----------------------------------------------------------------
+
+void TestSubMatchStringComparison() {
+	TEST_CASE("TestSubMatchStringComparison")
+
+	const char* str = "hello";
+	myns::csub_match sm;
+	sm.first = str;
+	sm.second = str + 5; // "hello"
+	sm.matched = true;
+
+	std::string s_hello = "hello";
+	std::string s_world = "world";
+	std::string s_abc = "abc";
+
+	// sub_match vs string
+	assert(sm == s_hello);
+	assert(!(sm == s_world));
+	assert(sm != s_world);
+	assert(!(sm != s_hello));
+	assert(sm < s_world);   // "hello" < "world"
+	assert(sm > s_abc);     // "hello" > "abc"
+	assert(sm <= s_hello);
+	assert(sm <= s_world);
+	assert(sm >= s_hello);
+	assert(sm >= s_abc);
+	
+	// string vs sub_match
+	assert(s_hello == sm);
+	assert(!(s_world == sm));
+	assert(s_world != sm);
+	assert(!(s_hello != sm));
+	assert(s_abc < sm);     // "abc" < "hello"
+	assert(s_world > sm);   // "world" > "hello"
+	assert(s_hello <= sm);
+	assert(s_abc <= sm);
+	assert(s_hello >= sm);
+	assert(s_world >= sm);
+
+	TEST_CASE_END("TestSubMatchStringComparison")
+}
+
+// -----------------------------------------------------------------
+// 9. Test comparison operators between sub_match and C-string
+// -----------------------------------------------------------------
+
+void TestSubMatchCStringComparison() {
+	TEST_CASE("TestSubMatchCStringComparison")
+
+	const char* str = "test";
+	myns::csub_match sm;
+	sm.first = str;
+	sm.second = str + 4; // "test"
+	sm.matched = true;
+
+	// sub_match vs C-string
+	assert(sm == "test");
+	assert(!(sm == "other"));
+	assert(sm != "other");
+	assert(!(sm != "test"));
+	assert(sm < "zebra");   // "test" < "zebra"
+	assert(sm > "apple");   // "test" > "apple"
+	assert(sm <= "test");
+	assert(sm <= "zebra");
+	assert(sm >= "test");
+	assert(sm >= "apple");
+	
+	// C-string vs sub_match
+	assert("test" == sm);
+	assert(!("other" == sm));
+	assert("other" != sm);
+	assert(!("test" != sm));
+	assert("apple" < sm);   // "apple" < "test"
+	assert("zebra" > sm);   // "zebra" > "test"
+	assert("test" <= sm);
+	assert("apple" <= sm);
+	assert("test" >= sm);
+	assert("zebra" >= sm);
+
+	TEST_CASE_END("TestSubMatchCStringComparison")
+}
+
+// -----------------------------------------------------------------
+// 10. Test stream output operator
+// -----------------------------------------------------------------
+
+void TestStreamOutputOperator() {
+	TEST_CASE("TestStreamOutputOperator")
+
+	const char* str = "output test";
+	myns::csub_match sm;
+	sm.first = str;
+	sm.second = str + 11; // "output test"
+	sm.matched = true;
+
+	std::ostringstream oss;
+	oss << sm;
+	assert(oss.str() == "output test");
+	
+	// Test with unmatched sub_match (should output empty string)
+	myns::csub_match sm_unmatched;
+	sm_unmatched.first = str;
+	sm_unmatched.second = str + 5;
+	sm_unmatched.matched = false;
+	
+	std::ostringstream oss2;
+	oss2 << sm_unmatched;
+	assert(oss2.str() == "");
+	
+	// Test with string iterator
+	std::string s = "string iterator test";
+	myns::ssub_match ssm;
+	ssm.first = s.begin();
+	ssm.second = s.begin() + 6; // "string"
+	ssm.matched = true;
+	
+	std::ostringstream oss3;
+	oss3 << ssm;
+	assert(oss3.str() == "string");
+
+	TEST_CASE_END("TestStreamOutputOperator")
+}
+
+// -----------------------------------------------------------------
+// 11. Test with regex search results
+// -----------------------------------------------------------------
+
+void TestComparisonWithRegexResults() {
+	TEST_CASE("TestComparisonWithRegexResults")
+
+	std::string text = "The quick brown fox jumps over the lazy dog";
+	myns::regex re("(\\w+) (\\w+) (\\w+)");
+	myns::smatch m;
+	
+	bool found = myns::regex_search(text, m, re);
+	assert(found);
+	assert(m.size() >= 4);
+	
+	// Test comparison operators on captured groups
+	// m[1] = "The", m[2] = "quick", m[3] = "brown"
+	assert(m[1] == "The");
+	assert(m[2] == "quick");
+	assert(m[3] == "brown");
+	
+	// String comparison follows std::basic_string::compare semantics
+	assert(m[1] < m[2]);    // "The" < "quick"
+	assert(m[3] < m[2]);    // "brown" < "quick"
+	
+	// Test compare method
+	assert(m[1].compare("The") == 0);
+	assert(m[2].compare(std::string("quick")) == 0);
+	
+	// Test stream output
+	std::ostringstream oss;
+	oss << m[1] << " " << m[2] << " " << m[3];
+	assert(oss.str() == "The quick brown");
+
+	TEST_CASE_END("TestComparisonWithRegexResults")
+}
+
+// -----------------------------------------------------------------
 // Main function
 // -----------------------------------------------------------------
 
@@ -233,6 +501,12 @@ int main() {
 	TestImplicitStringConversion();
 	TestLengthHelper();
 	TestIntegrationWithRegex();
+	TestCompareMethod();
+	TestSubMatchComparisonOperators();
+	TestSubMatchStringComparison();
+	TestSubMatchCStringComparison();
+	TestStreamOutputOperator();
+	TestComparisonWithRegexResults();
 
 	std::cout << "\n=================================\n";
 	std::cout << "All tests passed! ✅\n";
