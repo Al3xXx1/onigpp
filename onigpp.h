@@ -589,6 +589,19 @@ void swap(match_results<BidirIt, Alloc>& lhs, match_results<BidirIt, Alloc>& rhs
 ////////////////////////////////////////////
 // Comparison operators for match_results
 
+// Helper function to compare sub_match objects without creating strings
+template <class BidirIt>
+inline bool _sub_match_equal(const sub_match<BidirIt>& lhs, const sub_match<BidirIt>& rhs) {
+	if (lhs.matched != rhs.matched)
+		return false;
+	if (!lhs.matched)
+		return true;
+	// Compare iterator ranges directly
+	if (std::distance(lhs.first, lhs.second) != std::distance(rhs.first, rhs.second))
+		return false;
+	return std::equal(lhs.first, lhs.second, rhs.first);
+}
+
 template <class BidirIt, class Alloc>
 bool operator==(const match_results<BidirIt, Alloc>& lhs, const match_results<BidirIt, Alloc>& rhs) {
 	if (lhs.ready() != rhs.ready())
@@ -602,12 +615,10 @@ bool operator==(const match_results<BidirIt, Alloc>& lhs, const match_results<Bi
 	if (lhs.size() != rhs.size())
 		return false;
 	for (typename match_results<BidirIt, Alloc>::size_type i = 0; i < lhs.size(); ++i) {
-		if (lhs[i].matched != rhs[i].matched)
-			return false;
-		if (lhs[i].matched && lhs[i].str() != rhs[i].str())
+		if (!_sub_match_equal(lhs[i], rhs[i]))
 			return false;
 	}
-	return lhs.prefix().str() == rhs.prefix().str() && lhs.suffix().str() == rhs.suffix().str();
+	return _sub_match_equal(lhs.prefix(), rhs.prefix()) && _sub_match_equal(lhs.suffix(), rhs.suffix());
 }
 
 template <class BidirIt, class Alloc>

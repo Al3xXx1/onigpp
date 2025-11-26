@@ -350,7 +350,8 @@ void TestMatchResultsWithAllocator() {
 	TEST_CASE("TestMatchResultsWithAllocator")
 
 	// Test construction with allocator
-	using alloc_type = std::allocator<myns::sub_match<std::string::const_iterator>>;
+	// Use the allocator_type from smatch to ensure type consistency
+	using alloc_type = typename myns::smatch::allocator_type;
 	alloc_type alloc;
 	
 	myns::smatch m(alloc);

@@ -40,6 +40,8 @@ int main() {
 	
 #ifndef USE_STD_FOR_TESTS
 	// onigpp uses different bit positions than std::regex
+	// These bit positions match the values defined in onigpp.h:
+	// match_not_bow = (1 << 10), match_not_eow = (1 << 11), match_continuous = (1 << 12)
 	assert(match_not_bow == (1 << 10));
 	assert(match_not_eow == (1 << 11));
 	assert(match_continuous == (1 << 12));
