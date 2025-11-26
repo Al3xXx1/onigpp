@@ -622,7 +622,7 @@ When using `regex_replace`, the following references can be used in the replacem
 |-----------|-------------|
 | `$n` | Numbered reference. Inserts the string matched by the nth capture group (n ≥ 1). |
 | `$&` | Entire matched string. Inserts the full match. |
-| `$`` | Prefix. Inserts the text before the match. |
+| `` $` `` | Prefix. Inserts the text before the match. |
 | `$'` | Suffix. Inserts the text after the match. |
 | `$$` | Literal dollar sign. Inserts a single `$`. |
 
@@ -640,6 +640,8 @@ The following references are available only when the `oniguruma` flag is specifi
 | `\\` | Literal backslash. Inserts a single `\`. |
 
 ### Examples
+
+> **Note:** In C++ string literals, backslashes must be escaped (e.g., `"\\w"` represents the regex `\w`).
 
 ```cpp
 // Standard $1, $2 references
