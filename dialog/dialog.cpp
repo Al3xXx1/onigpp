@@ -41,7 +41,6 @@ BOOL get_window_text(HWND hwnd, string_type& text) {
 		text.clear();
 		return FALSE;
 	}
-	buffer.resize(copied);
 	text = std::move(buffer);
 	return TRUE;
 }
