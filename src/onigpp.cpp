@@ -1527,6 +1527,7 @@ OutputIt regex_replace(
 	BidirIt cur = first;
 	bool first_only = (flags & regex_constants::format_first_only) != 0;
 	bool no_copy = (flags & regex_constants::format_no_copy) != 0;
+	bool literal_mode = (flags & regex_constants::format_literal) != 0;
 	bool oniguruma_mode = (_regex_access<CharT, Traits>::get_flags(e) & regex_constants::oniguruma) != 0;
 
 	// Create name resolver functor for named group support
@@ -1540,9 +1541,14 @@ OutputIt regex_replace(
 			out = std::copy(cur, m[0].first, out);
 		}
 
-		// produce replacement for this match using match_results::format
-		// Use the extended format overload with name resolver and oniguruma_mode
-		out = m.format(out, fmt.data(), fmt.data() + fmt.size(), flags, resolver, oniguruma_mode);
+		// produce replacement for this match
+		if (literal_mode) {
+			// format_literal: copy replacement string as-is without any escape processing
+			out = std::copy(fmt.begin(), fmt.end(), out);
+		} else {
+			// Use match_results::format with name resolver and oniguruma_mode
+			out = m.format(out, fmt.data(), fmt.data() + fmt.size(), flags, resolver, oniguruma_mode);
+		}
 
 		// move cur to end of matched region
 		cur = m[0].second;

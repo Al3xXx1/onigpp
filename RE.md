@@ -1,6 +1,6 @@
 # Oniguruma++ Regular Expressions
 
-**Version 6.9.15** — 2025/11/26
+**Version 6.9.16** — 2025/11/27
 
 ---
 
@@ -604,6 +604,39 @@ The following references are available only when the `oniguruma` flag is specifi
 | `\n` | Numbered reference. Inserts the string matched by the nth capture group (n ≥ 1). |
 | `\0` | Entire matched string. Equivalent to `$&`. |
 | `\\` | Literal backslash. Inserts a single `\`. |
+
+### format_literal Flag
+
+When using `regex_replace`, you can pass the `format_literal` flag to treat the replacement string as literal text without any escape processing or reference expansion:
+
+```cpp
+#include "onigpp.h"
+using namespace onigpp;
+
+regex re(R"(\w+)");
+std::string input = "hello world";
+
+// Normal replacement: $& is expanded to the matched text
+std::string result1 = regex_replace(input, re, "[$&]");
+// result1: "[hello] [world]"
+
+// With format_literal: $& is kept as-is
+std::string result2 = regex_replace(input, re, "[$&]", regex_constants::format_literal);
+// result2: "[$&] [$&]"
+
+// Normal replacement: \n becomes newline
+std::string result3 = regex_replace(input, re, "\\n");
+// result3: "\n \n" (actual newlines)
+
+// With format_literal: \n is kept as-is
+std::string result4 = regex_replace(input, re, "\\n", regex_constants::format_literal);
+// result4: "\\n \\n" (literal backslash-n)
+```
+
+This is useful when:
+- You want to replace matched text with a fixed literal string
+- The replacement string contains `$` or `\` characters that should not be interpreted
+- You're processing user input where escape sequences should not be evaluated
 
 ## Examples
 

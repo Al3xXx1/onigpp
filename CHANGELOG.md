@@ -1,5 +1,12 @@
 # Changelog
 
+## 2025-11-27 Ver.6.9.16
+
+- Added `format_literal` flag for `regex_replace` (similar to Boost.Regex):
+  - When set, the replacement string is treated as literal text without any escape processing.
+  - `$n`, `$&`, `\n`, etc. in the replacement string are kept as-is instead of being expanded.
+  - Useful when the replacement string contains `$` or `\` characters that should not be interpreted.
+
 ## 2025-11-26 Ver.6.9.15
 
 - Added missing `std::regex_traits` methods to `onigpp::regex_traits` for improved standard library compatibility:
