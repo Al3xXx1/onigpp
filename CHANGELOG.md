@@ -2,14 +2,6 @@
 
 ## 2025-11-27 Ver.6.9.16
 
-- Added `format_literal` function for processing C++ escape sequences in strings:
-  - Converts escape sequences (`\n`, `\t`, `\r`, `\v`, `\f`, `\a`, `\b`, `\\`, `\0`) to actual characters.
-  - Supports hexadecimal escapes (`\xHH`).
-  - Supports Unicode escapes (`\uHHHH` for BMP, `\UHHHHHHHH` for full range).
-  - Supports octal escapes (`\ooo`).
-  - Useful for processing regex patterns from configuration files or user input.
-  - Works with `char`, `wchar_t`, `char16_t`, and `char32_t` character types.
-  - Added comprehensive tests in `format_literal_test.cpp`.
 - Added `format_literal` flag for `regex_replace` (similar to Boost.Regex):
   - When set, the replacement string is treated as literal text without any escape processing.
   - `$n`, `$&`, `\n`, etc. in the replacement string are kept as-is instead of being expanded.
