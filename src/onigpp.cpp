@@ -1859,20 +1859,10 @@ basic_string<CharT> regex_escape(const basic_string<CharT>& str) {
 		CharT ch = str[i];
 		// Check if character is a regex metacharacter that needs escaping
 		switch (ch) {
-			case CharT('.'):
-			case CharT('^'):
-			case CharT('$'):
-			case CharT('*'):
-			case CharT('+'):
-			case CharT('?'):
-			case CharT('('):
-			case CharT(')'):
-			case CharT('['):
-			case CharT(']'):
-			case CharT('{'):
-			case CharT('}'):
-			case CharT('\\'):
-			case CharT('|'):
+			case CharT('.'): case CharT('^'): case CharT('$'): case CharT('*'):
+			case CharT('+'): case CharT('?'): case CharT('('): case CharT(')'):
+			case CharT('['): case CharT(']'): case CharT('{'): case CharT('}'):
+			case CharT('\\'): case CharT('|'):
 				result += CharT('\\');
 				result += ch;
 				break;
