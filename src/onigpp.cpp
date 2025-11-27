@@ -1843,6 +1843,55 @@ void uninit() { onig_end(); }
 
 const char* version() { return onig_version(); }
 
+////////////////////////////////////////////
+// onigpp::regex_escape
+//
+// Escapes regex meta-characters in a string so it can be used as a literal pattern.
+// Meta-characters that are escaped: . ^ $ * + ? ( ) [ ] { } \ |
+
+template <class CharT>
+basic_string<CharT> regex_escape(const basic_string<CharT>& str) {
+	basic_string<CharT> result;
+	// Reserve space for potentially doubled size (worst case: all metacharacters)
+	result.reserve(str.size() * 2);
+
+	for (typename basic_string<CharT>::size_type i = 0; i < str.size(); ++i) {
+		CharT ch = str[i];
+		// Check if character is a regex metacharacter that needs escaping
+		switch (ch) {
+			case CharT('.'): case CharT('^'): case CharT('$'): case CharT('*'):
+			case CharT('+'): case CharT('?'): case CharT('('): case CharT(')'):
+			case CharT('['): case CharT(']'): case CharT('{'): case CharT('}'):
+			case CharT('\\'): case CharT('|'):
+				result += CharT('\\');
+				result += ch;
+				break;
+			default:
+				result += ch;
+				break;
+		}
+	}
+
+	return result;
+}
+
+// Convenience overload for C-string
+template <class CharT>
+basic_string<CharT> regex_escape(const CharT* str) {
+	return regex_escape(basic_string<CharT>(str));
+}
+
+// Explicit template instantiations for regex_escape
+template basic_string<char> regex_escape<char>(const basic_string<char>&);
+template basic_string<wchar_t> regex_escape<wchar_t>(const basic_string<wchar_t>&);
+template basic_string<char16_t> regex_escape<char16_t>(const basic_string<char16_t>&);
+template basic_string<char32_t> regex_escape<char32_t>(const basic_string<char32_t>&);
+
+template basic_string<char> regex_escape<char>(const char*);
+template basic_string<wchar_t> regex_escape<wchar_t>(const wchar_t*);
+template basic_string<char16_t> regex_escape<char16_t>(const char16_t*);
+template basic_string<char32_t> regex_escape<char32_t>(const char32_t*);
+
 // -------------------- Explicit template instantiations --------------------
 // Instantiates for: char, wchar_t, char16_t, char32_t
 // ---------------------------------------------------------------------------

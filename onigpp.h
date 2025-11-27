@@ -2044,4 +2044,25 @@ inline bool regex_search(
 	return regex_search(first, last, m, e, flags);
 }
 
+////////////////////////////////////////////
+// onigpp::regex_escape
+//
+// Escapes regular expression special/meta-characters in a given string.
+// This function takes a string and returns a new string where all regex
+// meta-characters (. ^ $ * + ? ( ) [ ] { } \ |) are escaped with a backslash.
+// The resulting string can be safely used as a literal pattern in a regex.
+//
+// Example:
+//   Input:  "a+b*c.d?e^f$g|h(i)j[k]{l}\\m"
+//   Output: "a\\+b\\*c\\.d\\?e\\^f\\$g\\|h\\(i\\)j\\[k\\]\\{l\\}\\\\m"
+//
+// Supported character types: char, wchar_t, char16_t, char32_t
+
+template <class CharT>
+basic_string<CharT> regex_escape(const basic_string<CharT>& str);
+
+// Convenience overload for C-string
+template <class CharT>
+basic_string<CharT> regex_escape(const CharT* str);
+
 } // namespace onigpp
