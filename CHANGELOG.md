@@ -10,6 +10,10 @@
   - Useful for processing regex patterns from configuration files or user input.
   - Works with `char`, `wchar_t`, `char16_t`, and `char32_t` character types.
   - Added comprehensive tests in `format_literal_test.cpp`.
+- Added `format_literal` flag for `regex_replace` (similar to Boost.Regex):
+  - When set, the replacement string is treated as literal text without any escape processing.
+  - `$n`, `$&`, `\n`, etc. in the replacement string are kept as-is instead of being expanded.
+  - Useful when the replacement string contains `$` or `\` characters that should not be interpreted.
 
 ## 2025-11-26 Ver.6.9.15
 

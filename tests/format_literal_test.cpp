@@ -226,6 +226,42 @@ int test_wstring() {
 	return 0;
 }
 
+// Test the format_literal flag for regex_replace
+int test_format_literal_flag() {
+	using namespace onigpp;
+
+	// Without format_literal, $1 is replaced with capture group 1
+	regex re("(\\w+)");
+	std::string input = "hello world";
+
+	// Normal replacement: $1 is expanded
+	std::string result1 = regex_replace(input, re, "[$1]");
+	TEST_ASSERT(result1 == "[hello] [world]", "normal replacement with $1");
+
+	// With format_literal: $1 is kept as-is
+	std::string result2 = regex_replace(input, re, "[$1]", regex_constants::format_literal);
+	TEST_ASSERT(result2 == "[$1] [$1]", "format_literal keeps $1 as-is");
+
+	// Test with backslash in replacement
+	std::string result3 = regex_replace(input, re, "\\n", regex_constants::format_literal);
+	TEST_ASSERT(result3 == "\\n \\n", "format_literal keeps \\n as-is");
+
+	// Without format_literal, \n is converted to actual newline (escape sequence processing)
+	std::string result4 = regex_replace(input, re, "\\n");
+	TEST_ASSERT(result4 == "\n \n", "normal mode processes \\n as newline");
+
+	// Test $& with format_literal
+	std::string result5 = regex_replace(input, re, "$&!", regex_constants::format_literal);
+	TEST_ASSERT(result5 == "$&! $&!", "format_literal keeps $& as-is");
+
+	// Without format_literal, $& is expanded to full match
+	std::string result6 = regex_replace(input, re, "$&!");
+	TEST_ASSERT(result6 == "hello! world!", "normal $& expansion");
+
+	TEST_PASS("test_format_literal_flag");
+	return 0;
+}
+
 int main() {
 	onigpp::auto_init init;
 
@@ -241,6 +277,7 @@ int main() {
 	result += test_edge_cases();
 	result += test_string_input();
 	result += test_wstring();
+	result += test_format_literal_flag();
 
 	if (result == 0) {
 		std::cout << "\n=== All tests passed ===" << std::endl;

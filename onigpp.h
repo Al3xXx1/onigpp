@@ -177,6 +177,7 @@ namespace regex_constants {
 	// Format control flags for replacement
 	static constexpr match_flag_type format_first_only = (1 << 8);
 	static constexpr match_flag_type format_no_copy = (1 << 9);
+	static constexpr match_flag_type format_literal = (1 << 13); // Treat replacement string as literal (no escape processing)
 
 	// Additional std::regex compatibility flags for word boundaries and continuous matching
 	// match_not_bow: First position is not treated as beginning-of-word (affects \b word boundary)
